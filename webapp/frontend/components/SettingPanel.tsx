@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api } from "../lib/store";
-import { Settings, DOC_TYPES, ModelInfo } from "../lib/types";
+import { Settings, ModelInfo } from "../lib/types";
 import { t, type Lang } from "../lib/i18n";
 
 const PROVIDER_PRESET: Record<string, { base_url: string; model: string }> = {
@@ -23,9 +23,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
   const L: Lang = setting.bahasa || "id";
   const T = (k: string) => t(L, k);
   const LOC = L === "id" ? "id-ID" : "en-US";
-
-  // buka/tutup dropdown doc_type
-  const [openDoc, setOpenDoc] = useState(false);
 
   // --- embedding list dari backend (dinamis: embedding baru auto-detect) ---
   const [models, setModels] = useState<ModelInfo[]>([]);
@@ -68,14 +65,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
     if (setting.retrieval !== "bm25" && setting.denseMethod !== "exact") cekMilvus();
     else setMilvus(null);
   }, [setting.retrieval, setting.denseMethod, cekMilvus]);
-
-  // --- doc_type checklist -------------------------------------------------
-  const toggleDoc = (dt: string) => {
-    const baru = setting.docTypes.includes(dt)
-      ? setting.docTypes.filter((x) => x !== dt)
-      : [...setting.docTypes, dt];
-    set({ docTypes: baru });
-  };
 
   // --- LLM test ------------------------------------------------------------
   const [testState, setTestState] = useState<"idle" | "busy" | "ok" | "fail">("idle");
@@ -128,30 +117,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
       <Grup id="model" judul={T("grup.model")} bawaan={false}
             buka={bukaGrup} onToggle={toggleGrup} lang={L}>
 
-      {/* --- embedding: dropdown dinamis --- */}
-      <div className="field">
-        <label>{T("set.emb")}
-          <span style={{ textTransform: "none", letterSpacing: 0 }}>
-            {models.length > 0 && ` — ${models.length} ${T("set.emb.terdeteksi")}`}</span>
-        </label>
-        <select value={setting.embedding}
-                data-testid="dropdown-embedding"
-                onChange={(e) => switchEmbedding(e.target.value)}>
-          {models.map((m) => (
-            <option key={m.tag} value={m.tag}>
-              {m.tag} (dim: {m.dim ?? "?"}, {m.count ?? "?"} {T("set.emb.vektor")}{m.is_gpu ? " · GPU" : ""})
-              {m.aktif ? ` — ${T("set.emb.aktif")}` : ""}
-            </option>
-          ))}
-        </select>
-        {aktifModel?.is_gpu && (
-          <div className="warnbox">
-            ⚠ {aktifModel.tag} (dim {aktifModel.dim}) {T("set.emb.warn")}
-          </div>
-        )}
-        {embMsg && <div className="okbox">{embMsg}</div>}
-        {embErr && <div className="errbox">⚠ {embErr}</div>}
-      </div>
 
       {/* --- LLM --- */}
       <div className="field">
@@ -224,6 +189,31 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
             </label>
           ))}
         </div>
+      </div>
+
+      {/* --- embedding: dropdown dinamis --- */}
+      <div className="field">
+        <label>{T("set.emb")}
+          <span style={{ textTransform: "none", letterSpacing: 0 }}>
+            {models.length > 0 && ` — ${models.length} ${T("set.emb.terdeteksi")}`}</span>
+        </label>
+        <select value={setting.embedding}
+                data-testid="dropdown-embedding"
+                onChange={(e) => switchEmbedding(e.target.value)}>
+          {models.map((m) => (
+            <option key={m.tag} value={m.tag}>
+              {m.tag} (dim: {m.dim ?? "?"}, {m.count ?? "?"} {T("set.emb.vektor")}{m.is_gpu ? " · GPU" : ""})
+              {m.aktif ? ` — ${T("set.emb.aktif")}` : ""}
+            </option>
+          ))}
+        </select>
+        {aktifModel?.is_gpu && (
+          <div className="warnbox">
+            ⚠ {aktifModel.tag} (dim {aktifModel.dim}) {T("set.emb.warn")}
+          </div>
+        )}
+        {embMsg && <div className="okbox">{embMsg}</div>}
+        {embErr && <div className="errbox">⚠ {embErr}</div>}
       </div>
 
       {/* --- retrieval --- */}
@@ -337,11 +327,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
           </div>
         )}
       </div>
-      </Grup>
-
-      <Grup id="relevansi" judul={T("grup.relevansi")} bawaan={false}
-            buka={bukaGrup} onToggle={toggleGrup} lang={L}>
-
       {/* --- rerank --- */}
       <div className="field">
         <label>{T("set.rerank")}</label>
@@ -382,50 +367,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
         </div>
       </div>
 
-      {/* --- doc_type: dropdown 2 kolom --- */}
-      <div className="field">
-        <label>{T("set.doctype")}</label>
-        <div className="dd-multiselect" data-testid="check-doc-type">
-          <button type="button" className="dd-toggle" data-tip={T("set.doctype.tip")}
-                  onClick={() => setOpenDoc((v) => !v)}>
-            <span>
-              {setting.docTypes.length === 0 ? T("set.doctype.semua") :
-                `${setting.docTypes.length} ${T("set.doctype.pilih")}: ${setting.docTypes.join(", ")}`}
-            </span>
-            <span className="chev">{openDoc ? "▲" : "▼"}</span>
-          </button>
-          {openDoc && (
-            <div className="dd-panel">
-              <div className="checklist kolom2">
-                {DOC_TYPES.map((dt) => (
-                  <label className="check-row" key={dt}>
-                    <input type="checkbox" checked={setting.docTypes.includes(dt)}
-                           onChange={() => toggleDoc(dt)} />
-                    {dt}
-                  </label>
-                ))}
-              </div>
-              <div className="check-actions">
-                <button type="button" className="mini-btn" data-tip={T("set.doctype.all.tip")}
-                        onClick={() => set({ docTypes: [...DOC_TYPES] })}>{T("set.doctype.all")}</button>
-                <button type="button" className="mini-btn" data-tip={T("set.doctype.none.tip")}
-                        onClick={() => set({ docTypes: [] })}>{T("set.doctype.none")}</button>
-                <span style={{ color: "var(--muted)", fontSize: 11, alignSelf: "center" }}>
-                  {setting.docTypes.length === 0 ? T("set.doctype.aktif") :
-                    `${setting.docTypes.length} ${T("set.doctype.terpilih")}`}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* --- year --- */}
-      <div className="field">
-        <label>{T("set.year")}</label>
-        <input type="number" value={setting.year}
-               onChange={(e) => set({ year: e.target.value })} placeholder={T("set.year.ph")} />
-      </div>
       </Grup>
 
       <Grup id="jawaban" judul={T("grup.jawaban")} bawaan={false}
