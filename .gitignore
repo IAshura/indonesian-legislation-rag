@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Artefak embedding (besar & regeneratif — model index = model query)
+pipeline/result/embeddings/
+*.npy
+
+# Output evaluasi
+pipeline/eval/golden_report.json
+
+# Environment & editor
+.env
+.venv/
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Jangan pernah commit kredensial
+*.env
+test_temp.py

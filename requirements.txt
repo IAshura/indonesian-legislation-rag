@@ -1,0 +1,31 @@
+# ============================================================
+# Indonesian Legislation RAG — requirements SATU PINTU
+# ============================================================
+# Install sekali dari root project:
+#   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+#
+# Catatan:
+# - Core pipeline (build_dataset.py) 100% stdlib, tanpa paket ini pun jalan.
+# - Laptop tanpa GPU: install torch CPU dulu SEBELUM file ini agar ringan:
+#     .\.venv\Scripts\python.exe -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+# - faiss-cpu & rank-bm25 saat ini TIDAK dipakai kode (retrieval pakai
+#   numpy mmap exact + bm25.py murni-python), dibiarkan terinstal bila
+#   sewaktu-waktu dibutuhkan eksperimen.
+
+# --- ML: embedding & rerank (pipeline + rag-tanpa-framework) ---
+numpy>=1.26
+torch>=2.1
+transformers>=4.40
+requests>=2.31
+
+# --- Retrieval: Milvus (opsional, bila pakai HNSW/IVF/FLAT) ---
+pymilvus>=2.4
+
+# --- Web backend (webapp/backend: FastAPI :8000) ---
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+
+# --- Eksperimen (tidak dipakai kode saat ini, opsional) ---
+# faiss-cpu>=1.7.4
+# rank-bm25>=0.2.2
