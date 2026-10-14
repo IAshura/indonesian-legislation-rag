@@ -27,6 +27,11 @@ Thumbs.db
 archive/
 experiments/
 
+# Frontend build / deps
+webapp/frontend/.next/
+webapp/frontend/node_modules/
+webapp/frontend/out/
+
 # Never commit credentials
 *.env
 test_temp.py
