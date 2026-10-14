@@ -363,12 +363,10 @@ export default function Halaman() {
         <aside className={`drawer ${drawer ? "open" : ""}`} data-testid="panel-kanan"
                style={drawer ? { width: lebarKanan, minWidth: lebarKanan, maxWidth: lebarKanan } : undefined}>
           <div className="drawer-head">
-            <div className="kanan-tabs">
-              <button className={drawer === "graf" ? "aktif" : ""} data-tip={T("page.tab.graf.tip")}
-                      onClick={() => setDrawer("graf")}>📊 {T("page.tab.graf")}</button>
-              <button className={drawer === "setting" ? "aktif" : ""} data-tip={T("page.tab.setting.tip")}
-                      onClick={() => setDrawer("setting")}>⚙️ {T("page.tab.setting")}</button>
+            <div className="drawer-title">
+              {drawer === "graf" ? `📊 ${T("page.tab.graf")}` : `⚙️ ${T("page.tab.setting")}`}
             </div>
+            <div className="header-spacer" />
             <button className="icon-btn" onClick={() => setDrawer(null)}>✕</button>
           </div>
           <div className="kanan-body" style={{ display: drawer === "graf" ? "none" : "" }}>
