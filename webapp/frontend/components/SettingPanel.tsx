@@ -125,20 +125,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
 
   return (
     <div>
-      {/* --- bahasa UI --- */}
-      <div className="field" style={{ marginBottom: 10 }}>
-        <label>{T("set.bahasa")}</label>
-        <div className="seg">
-          {(["id", "en"] as const).map((b) => (
-            <label key={b} className={L === b ? "aktif" : ""}
-                   data-tip={T(`set.bahasa.${b}.tip`)}>
-              <input type="radio" name="bahasa" checked={L === b}
-                     onChange={() => set({ bahasa: b })} />
-              {b === "id" ? "ID" : "EN"}
-            </label>
-          ))}
-        </div>
-      </div>
       <Grup id="strategi" judul={T("grup.strategi")} bawaan
             buka={bukaGrup} onToggle={toggleGrup} lang={L}>
       {/* --- mode --- */}
