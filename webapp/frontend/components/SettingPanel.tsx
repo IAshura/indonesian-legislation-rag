@@ -163,7 +163,10 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
       </div>
 
       {/* --- metode index dense (berlaku bila retrieval dense/hybrid) --- */}
-      <div className="field">
+      <div className="field"
+           style={setting.retrieval === "bm25"
+             ? { opacity: 0.45, filter: "grayscale(1)", pointerEvents: "none" }
+             : undefined}>
         <label>{T("set.idx")}</label>
         <div className="seg">
           {([
