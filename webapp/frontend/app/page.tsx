@@ -56,6 +56,12 @@ export default function Halaman() {
   const [sidebarTutup, setSidebarTutup] = useState(false);
   const [drawer, setDrawer] = useState<null | "setting" | "graf">(null);
   const [cari, setCari] = useState("");
+  // Esc closes the floating drawer
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setDrawer(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // load settings + history
   useEffect(() => {
