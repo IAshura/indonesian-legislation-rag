@@ -339,9 +339,7 @@ export default function Halaman() {
           />
         </section>
 
-        {/* ================= right: drawer ================= */}
-        <div className={`drawer-backdrop ${drawer ? "show" : ""}`}
-             onClick={() => setDrawer(null)} />
+        {/* ================= right: docked panel ================= */}
         <aside className={`drawer ${drawer ? "open" : ""}`} data-testid="panel-kanan">
           <div className="drawer-head">
             <div className="kanan-tabs">
