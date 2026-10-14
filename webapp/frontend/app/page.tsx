@@ -254,11 +254,11 @@ export default function Halaman() {
         )}
         <div className="header-spacer" />
         <div className="header-status">
-          <button className="icon-btn" data-tip={T("page.bahasa.tip")}
+          <button className="icon-btn lang" data-tip={T("page.bahasa.tip")}
                   onClick={gantiBahasa}>
             <span className="lbl">{L.toUpperCase()}</span>
           </button>
-          <button className="icon-btn" data-tip={T("page.tema.tip")}
+          <button className="icon-btn sq" data-tip={T("page.tema.tip")}
                   onClick={() => setTheme((v) => (v === "dark" ? "light" : "dark"))}
                   aria-label={T("page.tema.tip")}>
             {theme === "dark" ? (

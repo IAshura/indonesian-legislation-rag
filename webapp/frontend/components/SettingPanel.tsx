@@ -125,6 +125,88 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
 
   return (
     <div>
+      <Grup id="model" judul={T("grup.model")} bawaan={false}
+            buka={bukaGrup} onToggle={toggleGrup} lang={L}>
+
+      {/* --- embedding: dropdown dinamis --- */}
+      <div className="field">
+        <label>{T("set.emb")}
+          <span style={{ textTransform: "none", letterSpacing: 0 }}>
+            {models.length > 0 && ` — ${models.length} ${T("set.emb.terdeteksi")}`}</span>
+        </label>
+        <select value={setting.embedding}
+                data-testid="dropdown-embedding"
+                onChange={(e) => switchEmbedding(e.target.value)}>
+          {models.map((m) => (
+            <option key={m.tag} value={m.tag}>
+              {m.tag} (dim: {m.dim ?? "?"}, {m.count ?? "?"} {T("set.emb.vektor")}{m.is_gpu ? " · GPU" : ""})
+              {m.aktif ? ` — ${T("set.emb.aktif")}` : ""}
+            </option>
+          ))}
+        </select>
+        {aktifModel?.is_gpu && (
+          <div className="warnbox">
+            ⚠ {aktifModel.tag} (dim {aktifModel.dim}) {T("set.emb.warn")}
+          </div>
+        )}
+        {embMsg && <div className="okbox">{embMsg}</div>}
+        {embErr && <div className="errbox">⚠ {embErr}</div>}
+      </div>
+
+      {/* --- LLM --- */}
+      <div className="field">
+        <label>{T("set.llm")}</label>
+        <select value={setting.llm.provider}
+                onChange={(e) => {
+                  const p = PROVIDER_PRESET[e.target.value];
+                  set({ llm: { ...setting.llm,
+                                provider: e.target.value as Settings["llm"]["provider"],
+                                base_url: p.base_url, model: p.model } });
+                }}>
+          {Object.keys(PROVIDER_PRESET).map((p) => <option key={p} value={p}>{p}</option>)}
+        </select>
+      </div>
+      <div className="field">
+        <label>{T("set.baseurl")}</label>
+        <input type="text" value={setting.llm.base_url}
+               onChange={(e) => set({ llm: { ...setting.llm, base_url: e.target.value } })} />
+      </div>
+      <div className="field">
+        <label>{T("set.apikey")}</label>
+        <input type="password" value={setting.llm.api_key}
+               onChange={(e) => set({ llm: { ...setting.llm, api_key: e.target.value } })}
+               placeholder={T("set.apikey.ph")} />
+      </div>
+      <div className="field">
+        <label>{T("set.model")}</label>
+        <input type="text" value={setting.llm.model}
+               onChange={(e) => set({ llm: { ...setting.llm, model: e.target.value } })} />
+      </div>
+      <div className="field">
+        <label>{T("set.temp")} ({(setting.llm.temperature ?? 0.2).toFixed(1)} — {T("set.temp.note")})</label>
+        <input type="range" min={0} max={1} step={0.1}
+               value={setting.llm.temperature ?? 0.2} style={{ width: "100%" }}
+               onChange={(e) => set({ llm: { ...setting.llm, temperature: Number(e.target.value) } })} />
+      </div>
+      <div className="field">
+        <label>{T("set.maxtok")}</label>
+        <input type="number" min={16} max={8192} value={setting.llm.maxTokens ?? 1024}
+               onChange={(e) => set({ llm: { ...setting.llm,
+                 maxTokens: Math.max(16, Math.min(8192, Number(e.target.value) || 1024)) } })} />
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <button className="btn secondary" data-tip={T("set.test.tip")} onClick={testKoneksi}
+                disabled={testState === "busy"}>
+          {testState === "busy" ? T("set.test.busy") : T("set.test")}
+        </button>
+        {testMsg && (
+          <div className={testState === "ok" ? "okbox" : "errbox"}>
+            {testState === "ok" ? "✓ " : "⚠ "}{testMsg}
+          </div>)}
+      </div>
+
+      </Grup>
+
       <Grup id="strategi" judul={T("grup.strategi")} bawaan
             buka={bukaGrup} onToggle={toggleGrup} lang={L}>
       {/* --- mode --- */}
@@ -257,47 +339,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
       </div>
       </Grup>
 
-      <Grup id="jawaban" judul={T("grup.jawaban")} bawaan={false}
-            buka={bukaGrup} onToggle={toggleGrup} lang={L}>
-
-      <div className="field">
-        <label>{T("set.gaya")}</label>
-        <div className="seg">
-          {([
-            ["ringkas", T("set.gaya.ringkas"), T("set.gaya.ringkas.tip")],
-            ["standar", T("set.gaya.standar"), T("set.gaya.standar.tip")],
-            ["rinci", T("set.gaya.rinci"), T("set.gaya.rinci.tip")],
-          ] as const).map(([v, nama, tip]) => (
-            <label key={v} className={setting.gaya === v ? "aktif" : ""} data-tip={tip}>
-              <input type="radio" name="gaya" checked={setting.gaya === v}
-                     onChange={() => set({ gaya: v })} />
-              {nama}
-            </label>
-          ))}
-        </div>
-        <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 4 }}>
-          {setting.gaya === "ringkas" ? T("set.gaya.ringkas.note") :
-           setting.gaya === "rinci" ? T("set.gaya.rinci.note") :
-           T("set.gaya.standar.note")}
-        </div>
-      </div>
-
-      {/* --- dry run --- */}
-      <div className="field">
-        <label>{T("set.dry")}</label>
-        <div className="seg">
-          <label className={setting.dryRun ? "aktif" : ""} data-tip={T("set.dry.on.tip")}>
-            <input type="radio" name="dry" checked={setting.dryRun}
-                   onChange={() => set({ dryRun: true })} /> {T("set.dry.on")}
-          </label>
-          <label className={!setting.dryRun ? "aktif" : ""} data-tip={T("set.dry.off.tip")}>
-            <input type="radio" name="dry" checked={!setting.dryRun}
-                   onChange={() => set({ dryRun: false })} /> {T("set.dry.off")}
-          </label>
-        </div>
-      </div>
-      </Grup>
-
       <Grup id="relevansi" judul={T("grup.relevansi")} bawaan={false}
             buka={bukaGrup} onToggle={toggleGrup} lang={L}>
 
@@ -387,87 +428,47 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
       </div>
       </Grup>
 
-      <Grup id="model" judul={T("grup.model")} bawaan={false}
+      <Grup id="jawaban" judul={T("grup.jawaban")} bawaan={false}
             buka={bukaGrup} onToggle={toggleGrup} lang={L}>
 
-      {/* --- embedding: dropdown dinamis --- */}
       <div className="field">
-        <label>{T("set.emb")}
-          <span style={{ textTransform: "none", letterSpacing: 0 }}>
-            {models.length > 0 && ` — ${models.length} ${T("set.emb.terdeteksi")}`}</span>
-        </label>
-        <select value={setting.embedding}
-                data-testid="dropdown-embedding"
-                onChange={(e) => switchEmbedding(e.target.value)}>
-          {models.map((m) => (
-            <option key={m.tag} value={m.tag}>
-              {m.tag} (dim: {m.dim ?? "?"}, {m.count ?? "?"} {T("set.emb.vektor")}{m.is_gpu ? " · GPU" : ""})
-              {m.aktif ? ` — ${T("set.emb.aktif")}` : ""}
-            </option>
+        <label>{T("set.gaya")}</label>
+        <div className="seg">
+          {([
+            ["ringkas", T("set.gaya.ringkas"), T("set.gaya.ringkas.tip")],
+            ["standar", T("set.gaya.standar"), T("set.gaya.standar.tip")],
+            ["rinci", T("set.gaya.rinci"), T("set.gaya.rinci.tip")],
+          ] as const).map(([v, nama, tip]) => (
+            <label key={v} className={setting.gaya === v ? "aktif" : ""} data-tip={tip}>
+              <input type="radio" name="gaya" checked={setting.gaya === v}
+                     onChange={() => set({ gaya: v })} />
+              {nama}
+            </label>
           ))}
-        </select>
-        {aktifModel?.is_gpu && (
-          <div className="warnbox">
-            ⚠ {aktifModel.tag} (dim {aktifModel.dim}) {T("set.emb.warn")}
-          </div>
-        )}
-        {embMsg && <div className="okbox">{embMsg}</div>}
-        {embErr && <div className="errbox">⚠ {embErr}</div>}
+        </div>
+        <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 4 }}>
+          {setting.gaya === "ringkas" ? T("set.gaya.ringkas.note") :
+           setting.gaya === "rinci" ? T("set.gaya.rinci.note") :
+           T("set.gaya.standar.note")}
+        </div>
       </div>
 
-      {/* --- LLM --- */}
+      {/* --- dry run --- */}
       <div className="field">
-        <label>{T("set.llm")}</label>
-        <select value={setting.llm.provider}
-                onChange={(e) => {
-                  const p = PROVIDER_PRESET[e.target.value];
-                  set({ llm: { ...setting.llm,
-                                provider: e.target.value as Settings["llm"]["provider"],
-                                base_url: p.base_url, model: p.model } });
-                }}>
-          {Object.keys(PROVIDER_PRESET).map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
+        <label>{T("set.dry")}</label>
+        <div className="seg">
+          <label className={setting.dryRun ? "aktif" : ""} data-tip={T("set.dry.on.tip")}>
+            <input type="radio" name="dry" checked={setting.dryRun}
+                   onChange={() => set({ dryRun: true })} /> {T("set.dry.on")}
+          </label>
+          <label className={!setting.dryRun ? "aktif" : ""} data-tip={T("set.dry.off.tip")}>
+            <input type="radio" name="dry" checked={!setting.dryRun}
+                   onChange={() => set({ dryRun: false })} /> {T("set.dry.off")}
+          </label>
+        </div>
       </div>
-      <div className="field">
-        <label>{T("set.baseurl")}</label>
-        <input type="text" value={setting.llm.base_url}
-               onChange={(e) => set({ llm: { ...setting.llm, base_url: e.target.value } })} />
-      </div>
-      <div className="field">
-        <label>{T("set.apikey")}</label>
-        <input type="password" value={setting.llm.api_key}
-               onChange={(e) => set({ llm: { ...setting.llm, api_key: e.target.value } })}
-               placeholder={T("set.apikey.ph")} />
-      </div>
-      <div className="field">
-        <label>{T("set.model")}</label>
-        <input type="text" value={setting.llm.model}
-               onChange={(e) => set({ llm: { ...setting.llm, model: e.target.value } })} />
-      </div>
-      <div className="field">
-        <label>{T("set.temp")} ({(setting.llm.temperature ?? 0.2).toFixed(1)} — {T("set.temp.note")})</label>
-        <input type="range" min={0} max={1} step={0.1}
-               value={setting.llm.temperature ?? 0.2} style={{ width: "100%" }}
-               onChange={(e) => set({ llm: { ...setting.llm, temperature: Number(e.target.value) } })} />
-      </div>
-      <div className="field">
-        <label>{T("set.maxtok")}</label>
-        <input type="number" min={16} max={8192} value={setting.llm.maxTokens ?? 1024}
-               onChange={(e) => set({ llm: { ...setting.llm,
-                 maxTokens: Math.max(16, Math.min(8192, Number(e.target.value) || 1024)) } })} />
-      </div>
-      <div style={{ marginBottom: 12 }}>
-        <button className="btn secondary" data-tip={T("set.test.tip")} onClick={testKoneksi}
-                disabled={testState === "busy"}>
-          {testState === "busy" ? T("set.test.busy") : T("set.test")}
-        </button>
-        {testMsg && (
-          <div className={testState === "ok" ? "okbox" : "errbox"}>
-            {testState === "ok" ? "✓ " : "⚠ "}{testMsg}
-          </div>)}
-      </div>
-
       </Grup>
+
     </div>
   );
 }

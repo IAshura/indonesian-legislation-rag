@@ -98,6 +98,10 @@ button { font: inherit; }
 .app-header .brand { font-weight: 750; font-size: 15px; letter-spacing: .2px; white-space: nowrap; }
 .header-spacer { flex: 1; }
 .header-status { display: flex; align-items: center; gap: 8px; }
+/* fixed widths: language switches must not shift layout when ID<->EN text differs */
+.header-status .icon-btn { min-width: 86px; justify-content: center; }
+.header-status .icon-btn.lang { min-width: 58px; }
+.header-status .icon-btn.sq { min-width: 34px; }
 .icon-btn {
   min-width: 34px; height: 34px; padding: 0 8px; border-radius: 9px;
   border: 1px solid var(--border); background: var(--panel-2); color: var(--text-2);
