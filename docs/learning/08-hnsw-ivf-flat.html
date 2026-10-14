@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 08 · HNSW vs IVF vs FLAT — Belajar Pipeline Indonesian Legislation RAG</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html">⚖️ Belajar <b>Pipeline</b></a>
+  <span class="crumb">Bab 08 — Tiga Cara Pencarian Vektor</span>
+  <nav class="pager"><a href="07-query-eval.html">← Bab 07</a><a href="09-tracing-one-norm.html">Lanjut →</a></nav>
+</header>
+
+<div class="wrap">
+  <div class="chapter-head">
+    <div class="ch-num">Bab 08 · Struktur Indeks</div>
+    <h1>HNSW vs IVF vs FLAT: Cara Cepat (dan Jujur) Mencari Tetangga Terdekat</h1>
+    <p class="lede">Bab ini meringkas <code class="inline">pipeline/README-retrieval.md</code>: tiga struktur pencarian vektor,
+    apa saja yang berubah kalau berganti jenis (hanya dua titik!), tiga jebakan yang nyata dialami, dan kenapa
+    “exact search numpy” dipakai sebagai kebenaran acuan.</p>
+    <div class="chips">
+      <span class="chip">⏱️ ±10 menit baca</span>
+      <span class="chip">Sumber: <b>README-retrieval.md</b> · <b>insert_milvus.py</b> · <b>eval_retrieval.py</b></span>
+    </div>
+  </div>
+
+  <!-- ===== 1. POSISI ===== -->
+  <h2 id="posisi">1. Dua tempat pencarian di proyek ini</h2>
+  <table class="tblwrap"><table class="tbl">
+    <thead><tr><th style="width:190px">Tempat</th><th style="width:220px">Jenis saat ini</th><th>File</th></tr></thead>
+    <tbody>
+      <tr><td>Milvus (Docker lokal)</td><td><code class="inline">HNSW</code> + metrik <code class="inline">IP</code>, search <code class="inline">ef: 64</code></td><td class="f">insert_milvus.py · smoke_milvus.py</td></tr>
+      <tr><td>Eval (numpy murni)</td><td><b>Brute force / exact</b> — <code class="inline">emb @ q</code> ke seluruh vektor</td><td class="f">eval/eval_retrieval.py baris 110 · cell 7 Colab</td></tr>
+    </tbody>
+  </table></table>
+  <div class="tip"><b>Artinya:</b> baseline exact search <b>sudah ada</b> dan selalu bisa jadi “jawaban benar” pembanding.
+  HNSW/IVF baru dianggap layak bila hasilnya mendekati baseline ini dengan latensi lebih murah.</div>
+  <!-- ===== 2. TIGA JENIS ===== -->
+  <h2 id="tiga">2. Tiga jenis pencarian — konsep singkat</h2>
+  <table class="tblwrap"><table class="tbl">
+    <thead><tr><th style="width:150px">Jenis</th><th>Cara kerja (analogi pemula)</th><th style="width:130px">Recall</th><th style="width:150px">Kecepatan di data kita</th></tr></thead>
+    <tbody>
+      <tr><td class="f">FLAT (exact)</td><td>Query dibandingkan ke <b>semua</b> vektor satu per satu, ambil top-k — seperti membaca seluruh kamus demi satu kata. Kebenaran mutlak.</td><td><b>100%</b></td><td>~10–50 ms (63 rb × 1024 — masih sangat cepat)</td></tr>
+      <tr><td class="f">HNSW</td><td>Membangun <b>graph</b> tetangga-terdekat berlapis; pencarian greedy dari titik masuk — seperti bertanya dari satu kenalan ke kenalan yang lebih dekat tujuan, lapis demi lapis.</td><td>~99–100% bila <code class="inline">ef</code> cukup</td><td>~1–5 ms</td></tr>
+      <tr><td class="f">IVF (IVF_FLAT)</td><td>Ruang vektor dibagi jadi <code class="inline">nlist</code> <b>kluster</b> (centroid k-means); query hanya mengecek <code class="inline">nprobe</code> kluster terdekat — seperti mencari buku hanya di rak-rak yang paling relevan.</td><td>Bergantung rasio nprobe/nlist</td><td>~2–10 ms</td></tr>
+    </tbody>
+  </table></table>
+  <p>Metrik <code class="inline">IP</code> dipakai semua jenis karena vektor kita sudah L2-normal — <b>dot = cosine</b>.
+  Ini tidak berubah kapan pun index diganti.</p>
+
+  <!-- ===== 3. YANG BERUBAH ===== -->
+  <h2 id="berubah">3. Yang berubah kalau berganti jenis: hanya dua titik</h2>
+  <h3>a) Saat membuat koleksi — <code class="inline">INDEX_CONFIGS</code> di insert_milvus.py</h3>
+  <table class="tblwrap"><table class="tbl">
+    <thead><tr><th style="width:150px">Jenis</th><th>index_params</th><th>Catatan</th></tr></thead>
+    <tbody>
+      <tr><td class="f">HNSW (aktif)</td><td class="f">{"M": 16, "efConstruction": 200}</td><td>M = lebar graph; efConstruction = kualitas build</td></tr>
+      <tr><td class="f">IVF_FLAT</td><td class="f">{"nlist": 1024}</td><td>Aturan kasar nlist ≈ 4·√N (63 rb → ±1.000); Milvus menolak bila nlist &gt; jumlah vektor</td></tr>
+      <tr><td class="f">FLAT</td><td class="f">{} (tanpa parameter)</td><td>Juga terjadi otomatis bila koleksi dibuat tanpa index</td></tr>
+    </tbody>
+  </table></table>
+  <h3>b) Saat mencari — parameter <code class="inline">search</code></h3>
+  <table class="tblwrap"><table class="tbl">
+    <thead><tr><th style="width:150px">Jenis</th><th>param search</th><th>Efek menaikkan nilainya</th></tr></thead>
+    <tbody>
+      <tr><td class="f">HNSW (ef 64)</td><td class="f">{"ef": 64}</td><td>ef 64 → 128 → 256: recall naik, latensi naik</td></tr>
+      <tr><td class="f">IVF</td><td class="f">{"nprobe": 32}</td><td>nprobe naik → makin banyak kluster dicek → recall naik</td></tr>
+      <tr><td class="f">FLAT</td><td class="f">{} (kosong)</td><td>Tidak ada parameter — hasil selalu exact</td></tr>
+    </tbody>
+  </table></table>
+  <div class="iron"><b>Kesimpulan README-retrieval §7:</b> “Yang berubah hanya <code class="inline">index_params</code> saat membuat
+  koleksi dan <code class="inline">params</code> saat search (ef untuk HNSW, nprobe untuk IVF, kosong untuk FLAT) —
+  schema, insert, encoder, dan aturan ‘model index = model query’ tidak tersentuh.” Parameter search bebas diubah
+  <b>tanpa insert ulang</b>; index type terikat di koleksi (ganti = <code class="inline">--rebuild-index</code> atau koleksi kedua).</div>
+
+  <!-- ===== 4. BASELINE ===== -->
+  <h2 id="baseline">4. Baseline exact — dua jalur yang sudah tersedia</h2>
+  <ol>
+    <li><b>Numpy murni</b> (tanpa Docker/Milvus): <code class="inline">emb @ q</code> di eval lokal dan cell 7 Colab —
+    63 rb × 1024 di CPU masih hitungan milidetik per query. Inilah kebenaran acuan eval resmi.</li>
+    <li><b>Milvus tanpa index / index FLAT</b>: pembagian kerja yang sama dilakukan di dalam Milvus.</li>
+  </ol>
+  <p>Bukti dari sesi build: top-5 Milvus HNSW (ef 64 maupun 256) <b>identik skor dan urutan</b> dengan numpy exact
+  untuk query kedaulatan UUD 1945 — ANN-nya sehat.</p>
+
+  <!-- ===== 5. JEBAKAN ===== -->
+  <h2 id="jebakan">5. Tiga jebakan yang pernah dialami (README-retrieval §5)</h2>
+  <ol>
+    <li><b>Index dibangun belakangan (asinkron).</b> Beberapa detik setelah insert/flush, HNSW belum siap; query bisa
+    mengembalikan hasil yang salah (kasus nyata: demo pertama mengembalikan chunk berbeda dengan skor lebih rendah;
+    run berikutnya sudah identik dengan exact). Solusi: tunggu indeks selesai / jalankan <code class="inline">smoke_milvus.py</code> dulu.</li>
+    <li><b>IVF sensitif data kecil.</b> Dengan 63 rb vektor, manfaat IVF belum terasa dan recall lebih rapuh terhadap
+    <code class="inline">nprobe</code>; FLAT lebih sederhana.</li>
+    <li><b>Jangan campur metrik.</b> Semua koleksi memakai IP + vektor L2-normal. Search dengan metrik L2 pada vektor
+    ternormalisasi memberi peringkat yang terbalik secara skala.</li>
+  </ol>
+
+  <!-- ===== 6. REKOMENDASI ===== -->
+  <h2 id="rekomendasi">6. Rekomendasi untuk dataset ini (README-retrieval §6)</h2>
+  <table class="tblwrap"><table class="tbl">
+    <thead><tr><th style="width:250px">Kebutuhan</th><th>Pilihan</th></tr></thead>
+    <tbody>
+      <tr><td>Benchmark / kebenaran acuan</td><td><b>Numpy exact</b> (eval lokal &amp; cell 7 Colab) — sudah ada, jangan diubah</td></tr>
+      <tr><td>Dataset saat ini (63 rb)</td><td><b>FLAT</b> atau HNSW sama-sama cepat; HNSW ef 64–128 aman untuk produksi</td></tr>
+      <tr><td>Nanti jutaan vektor / latensi ketat</td><td>HNSW dengan ef lebih besar, atau mulai uji <code class="inline">IVF_FLAT</code> (nlist ±1.000, nprobe mulai 64)</td></tr>
+      <tr><td>Aturan lulus ANN</td><td>recall top-8 vs exact ≥ 0,99 sebelum percaya angka latensi</td></tr>
+    </tbody>
+  </table></table>
+  <p>Cara mengukur: jalankan eval exact (numpy) dan pencarian Milvus untuk golden set yang sama, lalu bandingkan
+  <code class="inline">top_ids</code> per query — persis perbandingan yang dilakukan di sesi build.</p>
+
+  <h2 id="ringkasan">7. Ringkasan bab</h2>
+  <ul>
+    <li><b>FLAT</b> = exact, 100%, cukup cepat di 63 rb vektor; <b>HNSW</b> = graph ANN, default produksi (ef naikkan recall);
+    <b>IVF</b> = kluster ANN, baru berbunga di jutaan vektor.</li>
+    <li>Ganti jenis pencarian hanya menyentuh <code class="inline">index_params</code> &amp; <code class="inline">params</code> search — sisanya tak tersentuh.</li>
+    <li>Baseline exact numpy = hakim kebenaran ANN; aturan lulus ≥0,99 recall top-8.</li>
+    <li>Jebakan: indeks asinkron, IVF di data kecil, mencampur metrik.</li>
+  </ul>
+  <div class="tip"><b>Istilah baru bab ini:</b> <a class="term" href="10-glosarium.html#flat">FLAT / brute force</a>,
+  <a class="term" href="10-glosarium.html#hnsw">HNSW</a>, <a class="term" href="10-glosarium.html#ivf">IVF / nlist / nprobe</a>,
+  <a class="term" href="10-glosarium.html#ef">ef</a>, <a class="term" href="10-glosarium.html#ann">ANN</a> (ulang),
+  <a class="term" href="10-glosarium.html#latensi">latensi</a>.</div>
+
+  <div class="footnav">
+    <a href="07-query-eval.html"><span class="dir">← Kembali</span><br><span class="tt">Query &amp; Eval (Bab 07)</span></a>
+    <a href="09-tracing-one-norm.html" class="next"><span class="dir">Lanjut · Bab 09 ⭐</span><br><span class="tt">Pelacakan Satu Norma →</span></a>
+  </div>
+
+  <div class="attrib">Ringkasan setia dari <code>pipeline/README-retrieval.md</code> (§1–7), selaras dengan kode
+  <code>insert_milvus.py</code> (INDEX_CONFIGS, --rebuild-index, --demo) dan <code>eval/eval_retrieval.py</code> (exact numpy).</div>
+</div>
+</body>
+</html>

@@ -392,7 +392,7 @@ def api_milvus_status():
             "instruksi": "cd C:\\milvus; docker compose up -d "
                          "(tunggu ±1 menit sampai 3 container Up), "
                          "lalu ulangi. Bila koleksi belum ada: "
-                         "jalankan pipeline/insert_milvus.py dari README-CARA-MENYALAKAN.md langkah 5."}
+                          "run pipeline/insert_milvus.py (see docs/operations-runbook.md step 5)."}
     try:
         from pymilvus import MilvusClient
     except ImportError:

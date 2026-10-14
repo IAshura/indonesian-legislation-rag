@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 09 · Pelacakan Satu Norma — Belajar Pipeline Indonesian Legislation RAG</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html">⚖️ Belajar <b>Pipeline</b></a>
+  <span class="crumb">Bab 09 — Bab Puncak ⭐</span>
+  <nav class="pager"><a href="08-hnsw-ivf-flat.html">← Bab 08</a><a href="10-glosarium.html">Lanjut →</a></nav>
+</header>
+
+<div class="wrap">
+  <div class="chapter-head">
+    <div class="ch-num">Bab 09 · Bab Puncak</div>
+    <h1>Menyatukan Semuanya: Perjalanan Satu Norma dari CSV sampai Hasil Pencarian</h1>
+    <p class="lede">Bab-bab sebelumnya membedah tiap tahap terpisah. Sekarang kita <b>menyatukan semuanya</b> dengan
+    mengikuti SATU norma asli melalui seluruh pipeline: <i>“(2) Kedaulatan adalah di tangan rakyat, dan dilakukan
+    sepenuhnya oleh Majelis Permusyawaratan Rakyat.”</i> — <b>Pasal 1 Ayat (2) UUD 1945</b>.
+    Setiap lompatan menampilkan cuplikan data asli dari file proyek.</p>
+    <div class="chips">
+      <span class="chip">⏱️ ±12 menit baca</span>
+      <span class="chip">⭐ Melibatkan hampir semua file proyek</span>
+      <span class="chip">Semua cuplikan = data asli</span>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="fnode in"><span class="t">1 · units.csv + texts/</span><span class="d">baris mentah + alamat halaman/baris</span></div>
+    <div class="farrow">→</div>
+    <div class="fnode proc"><span class="t">2 · build_dataset.py</span><span class="d">chunk uud-1945::p::1::02 + parent</span></div>
+    <div class="farrow">→</div>
+    <div class="fnode proc"><span class="t">3 · embedding_input → vektor</span><span class="d">1024-d float32, norm 1,0</span></div>
+    <div class="farrow">→</div>
+    <div class="fnode proc"><span class="t">4 · ids.jsonl → Milvus</span><span class="d">baris index 79 → entitas koleksi</span></div>
+    <div class="farrow">→</div>
+    <div class="fnode out"><span class="t">5 · pencarian top-8</span><span class="d">exact numpy + hasil Milvus</span></div>
+    <div class="farrow">→</div>
+    <div class="fnode out"><span class="t">6 · parent pasal utuh</span><span class="d">small-to-big → konteks LLM</span></div>
+  </div>
+
+  <!-- ===== LOMPATAN 1 ===== -->
+  <h2 id="l1">Lompatan 1 — Baris CSV + file teks sumber</h2>
+  <p>Di <code class="inline">data/corpus/units.csv</code>, norma kita adalah baris dengan <code class="inline">unit_id 400669</code>
+  (tampil lengkap di Bab 02 §2). Kunci provenance-nya: <b>UUD_1945.pdf · halaman 1 · baris 31–32</b>.
+  Mari kita buktikan alamat itu — file <code class="inline">texts/01-UUD/UUD_1945.txt</code>, baris isi ke-31 dan ke-32:</p>
+  <div class="code"><div class="code-head"><span class="dot"></span><span class="file">data/corpus/texts/01-UUD/UUD_1945.txt</span><span class="lines">baris file 30–34 (PAGE 1)</span></div><div class="code-body"><span class="cl" data-ln="30">Pasal 1</span><span class="cl" data-ln="31">(1) Negara Indonesia ialah Negara Kesatuan, yang berbentuk Republik.</span><span class="cl hl" data-ln="32">(2) Kedaulatan adalah di tangan rakyat, dan dilakukan sepenuhnya oleh Majelis</span><span class="cl hl" data-ln="33">Permusyawaratan Rakyat.</span><span class="cl" data-ln="34">www.peraturan.go.id</span></div></div></div>
+  <div class="note"><b>Hasil lompatan 1:</b> baris CSV (ordinal baris isi 31–32 di halaman 1) <b>cocok persis</b>
+  dengan teks asli. Provenance bisa diaudit — inilah fondasi kepercayaan seluruh sistem.</div>
+  <!-- ===== LOMPATAN 2 ===== -->
+  <h2 id="l2">Lompatan 2 — build_dataset.py → record chunk &amp; parent</h2>
+  <p>Builder membaca baris itu (urut halaman→baris→unit_id), mewarisi state <code class="inline">bab="BAB I"</code>,
+  <code class="inline">pasal="Pasal 1"</code>, dan menghasilkan (bedah lengkapnya di Bab 03 §6 dan §9):</p>
+  <ul>
+    <li>chunk <code class="inline">uud-1945::p::1::02</code> — peran <span class="badge b-norma">norma</span>
+    via <code class="inline">marker</code>, <code class="inline">is_fragment=false</code> (17 token ≥ 8),
+    citation_str <i>“Bab I Pasal 1 Ayat (2)”</i>, provenance halaman 1 baris 31–32 (unit_id 400669).</li>
+    <li>parent <code class="inline">uud-1945::p::1</code> — teks utuh pasal 1 (199 char), anak: ::01, ::02, ::03,
+    satu window w01 (203 char).</li>
+    <li>field <code class="inline">embedding_input</code>: <i>“UUD - Bab I Pasal 1 Ayat (2): (2) Kedaulatan adalah di tangan
+    rakyat, dan dilakukan sepenuhnya oleh Majelis Permusyawaratan Rakyat.”</i></li>
+  </ul>
+  <div class="note"><b>Hasil lompatan 2:</b> satu baris CSV kini punya tiga identitas yang saling terhubung:
+  chunk_id (untuk pencarian), parent_id (untuk konteks), provenance (untuk sitasi). Semua JSON asli sudah ditampilkan di Bab 03 §9.</div>
+
+  <!-- ===== LOMPATAN 3 ===== -->
+  <h2 id="l3">Lompatan 3 — embedding_input menjadi vektor 1024-dimensi</h2>
+  <p>Model <code class="inline">Qwen/Qwen3-Embedding-0.6B</code> (aktif) mengubah embedding_input itu menjadi satu baris
+  di <code class="inline">result/embeddings/qwen3-06b/embeddings.npy</code>. Vektor asli normanya (dihitung ulang saat situs ini dibuat):</p>
+  <div class="code"><div class="code-head"><span class="dot"></span><span class="file">result/embeddings/qwen3-06b/embeddings.npy</span><span class="lines">baris index 79 = uud-1945::p::1::02 (asli)</span></div><div class="code-body"><span class="cl out">dim   : 1024 (float32)</span><span class="cl out">norm L2: 1.0000  (tervalidasi verify_embeddings.py)</span><span class="cl out">8 dim pertama: [-0.0545, -0.0987, -0.0038, -0.0677, 0.0042, -0.0962, 0.0020, -0.0005]</span><span class="cl out">… total 1.024 angka …</span></div></div></div>
+  <div class="note"><b>Hasil lompatan 3:</b> teks sudah menjadi titik di ruang makna 1024-dimensi. Angka individualnya
+  tidak “berarti” bagi manusia — arah kolektifnya yang menyimpan makna.</div>
+
+  <!-- ===== LOMPATAN 4 ===== -->
+  <h2 id="l4">Lompatan 4 — ids.jsonl → entitas Milvus</h2>
+  <p>Baris index ke-79 di npy punya pasangan di baris ke-79 <code class="inline">ids.jsonl</code> (ditampilkan di Bab 05 §3),
+  lalu <code class="inline">insert_milvus.py</code> memasukkannya sebagai <b>entitas koleksi</b> — batch 1.000, kolom persis
+  sesuai skema Bab 06 §2:</p>
+  <table class="tblwrap"><table class="tbl">
+    <thead><tr><th>Field Milvus</th><th>Nilai entitas kita</th></tr></thead>
+    <tbody>
+      <tr><td class="f">id (auto)</td><td>diberikan otomatis oleh Milvus</td></tr>
+      <tr><td class="f">chunk_id / parent_id / document_id</td><td class="mono">uud-1945::p::1::02 · uud-1945::p::1 · uud-1945</td></tr>
+      <tr><td class="f">part / content_role</td><td class="mono">norma · norma</td></tr>
+      <tr><td class="f">doc_type / legal_force_axis / year / is_fragment</td><td class="mono">UUD · I-ladder · 1945 · false</td></tr>
+      <tr><td class="f">embedding (FLOAT_VECTOR dim=1024)</td><td class="mono">[−0,0545, −0,0987, …] — vektor dari lompatan 3</td></tr>
+    </tbody>
+  </table></table>\n</div>\n</body>\n</html>\n", "allowMultiple": false}]

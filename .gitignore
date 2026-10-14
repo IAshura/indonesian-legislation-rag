@@ -23,6 +23,10 @@ pipeline/eval/golden_report.json
 Thumbs.db
 .DS_Store
 
-# Jangan pernah commit kredensial
+# Archived experiments (large, pre-canonical — kept on disk, not in git)
+archive/
+experiments/
+
+# Never commit credentials
 *.env
 test_temp.py

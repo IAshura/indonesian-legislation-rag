@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 07 · Query &amp; Eval — Belajar Pipeline Indonesian Legislation RAG</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="index.html">⚖️ Belajar <b>Pipeline</b></a>
+  <span class="crumb">Bab 07 — Encoder Query &amp; Evaluasi Recall@8</span>
+  <nav class="pager"><a href="06-milvus-retrieval.html">← Bab 06</a><a href="08-hnsw-ivf-flat.html">Lanjut →</a></nav>
+</header>
+
+<div class="wrap">
+  <div class="chapter-head">
+    <div class="ch-num">Bab 07 · Query &amp; Eval</div>
+    <h1>Dari Pertanyaan Manusia ke Recall@8 — Cara Mengukur “Bagus” secara Jujur</h1>
+    <p class="lede">Sisi pakai (query) punya kodetnya sendiri: Qwen3 memakai <b>instruksi tugas + last-token pooling</b>
+    yang berbeda dari sisi dokumen. Dan yang lebih penting: <b>bagus menurut siapa?</b> Proyek ini memakai 12
+    <code class="inline">golden_queries.jsonl</code> (pertanyaan emas dengan jawaban yang diketahui) dan mengukur
+    <a class="term" href="10-glosarium.html#recall">recall@8</a> — hasil resminya 0,750. Kita bedah keduanya.</p>
+    <div class="chips">
+      <span class="chip">⏱️ ±15 menit baca</span>
+      <span class="chip">File: <b>embed_query_qwen.py</b> · <b>eval/eval_retrieval.py</b> · <b>eval/golden_report.json</b></span>
+    </div>
+  </div>
+
+  <!-- ===== 1. ENCODER QUERY ===== -->
+  <h2 id="encoder">1. <code class="inline">embed_query_qwen.py</code>: sisi pertanyaan</h2>
+  <p>Kenapa file ini terpisah? Dokstringnya menjawab (baris 5–8): pooling Qwen3-Embedding adalah
+  <b>LAST-TOKEN + instruksi tugas pada sisi query</b> — berbeda dari mean-pooling + prefix e5 di Bab 05.
+  <code class="inline">eval_retrieval.py</code> membaca <code class="inline">meta.json</code> dan memakai encoder ini bila
+  <code class="inline">meta.pooling == "last_token"</code>. Sumber kebenaran parameter = meta.json —
+  <i>“jangan mengarang model/dimensi di sini”</i>.</p>
+  <div class="code"><div class="code-head"><span class="dot"></span><span class="file">pipeline/embed_query_qwen.py</span><span class="lines">baris 58–89 (inti)</span></div><div class="code-body"><span class="cl" data-ln="58">@torch.no_grad()</span><span class="cl" data-ln="59">def encode_query(texts: list[str], model: str | None = None,</span><span class="cl" data-ln="60">                 instruction: str | None = None,</span><span class="cl" data-ln="61">                 max_length: int = 512, batch: int = 8) -&gt; np.ndarray:</span><span class="cl" data-ln="67">    meta = load_meta()</span><span class="cl" data-ln="68">    model = model or meta.get("model")</span><span class="cl" data-ln="69">    instruction = instruction or meta.get("query_instruction", "")</span><span class="cl" data-ln="70">    keep_dim = meta.get("keep_dim") or meta.get("dim")</span><span class="cl" data-ln="76">    for i in range(0, len(texts), batch):</span><span class="cl" data-ln="77">        chunk = [f"Instruct: {instruction}\nQuery: {t}" for t in texts[i:i + batch]]</span><span class="cl" data-ln="78">        enc = tok(chunk, padding=True, truncation=True, max_length=max_length,</span><span class="cl" data-ln="79">                  return_tensors="pt").to(dev)</span><span class="cl" data-ln="80">        hs = mdl(**enc).last_hidden_state</span><span class="cl" data-ln="81">        mask = enc["attention_mask"]</span><span class="cl hl" data-ln="82">        if (mask[:, -1] == 1).all():          # left padding → posisi terakhir</span><span class="cl hl" data-ln="83">            pooled = hs[:, -1]</span><span class="cl" data-ln="84">        else:</span><span class="cl" data-ln="85">            seq = mask.sum(dim=1) - 1</span><span class="cl" data-ln="86">            pooled = hs[torch.arange(hs.shape[0], device=hs.device), seq]</span><span class="cl hl" data-ln="87">        pooled = torch.nn.functional.normalize(pooled.float(), p=2, dim=1)</span><span class="cl" data-ln="89">    vecs = np.concatenate(out).astype("float32")</span><span class="cl hl" data-ln="89b">    return vecs[:, :keep_dim]   # MRL: pangkas dimensi sesuai meta.json</span></div></div></div>
+  <p>Tiga hal yang perlu dicermati:</p>
+  <ol>
+    <li><b>Format query</b> (baris 76): <code class="inline">Instruct: {instruksi}\nQuery: {pertanyaan}</code> — instruksi diambil dari
+    meta.json: <i>“Given a user question about Indonesian legislation, retrieve the most relevant legal provisions (norma)…”</i>
+    (dokumen side TIDAK diberi instruksi; ini konvensi resmi Qwen3-Embedding).</li>
+    <li><b>Last-token pooling</b> (baris 82–86): padding kiri membuat token terakhir = token asli terakhir untuk semua baris batch;
+    fallback baris 84–86 menjaga bila padding tidak seragam.</li>
+    <li><b>MRL keep_dim</b> (baris 89): vektor dipangkas ke dimensi yang tersimpan di meta.json — query dan index otomatis sejajar.</li>
+  </ol>
+
+  <!-- ===== 2. GOLDEN QUERIES ===== -->
+  <h2 id="golden">2. 12 golden queries — “ujian” resmi retrieval</h2>
+  <p>File <code class="inline">eval/golden_queries.jsonl</code> berisi 12 pertanyaan + <b>ekspektasi jawaban</b> yang bisa
+  dicek komputer (<code class="inline">expect_any</code> — cukup satu predikat terpenuhi). Contoh asli:</p>
+  <div class="code"><div class="code-head"><span class="dot"></span><span class="file">pipeline/eval/golden_queries.jsonl</span><span class="lines">g01 &amp; g02 asli</span></div><div class="code-body"><span class="cl out">{"id": "g01", "question": "Di tangan siapa kedaulatan berada menurut UUD 1945?",</span><span class="cl out"> "expect_any": [{"doc_regex": "undang-undang dasar", "ayat": "2", "kw": ["kedaulatan"], "pasal": "1"}]}</span><span class="cl out">{"id": "g02", "question": "Berapa lama masa jabatan presiden dan berapa kali dapat dipilih kembali?",</span><span class="cl out"> "expect_any": [{"doc_regex": "undang-undang dasar", "kw": ["lima tahun"], "pasal": "7"}]}</span></div></div></div>
+  <p>Arti predikatnya: jawaban yang benar harus dari dokumen yang cocok <code class="inline">doc_regex</code>, di pasal yang benar
+  (<code class="inline">pasal</code>), dengan kata kunci ada di teks (<code class="inline">kw</code>), dan bila disebut, ayat yang benar.</p>
+
+  <!-- ===== 3. MATCHER ===== -->
+  <h2 id="matcher">3. Matcher eval: <code class="inline">matches()</code> + <code class="inline">pas_num()</code></h2>
+  <p>Matcher menentukan apakah salah satu dari 8 hasil pencarian benar-benar “jawaban emas”. Ada dua perbaikan penting
+  yang lahir dari pemakaian nyata (tertulis di README folder qwen3-06b):</p>
+  <div class="code"><div class="code-head"><span class="dot"></span><span class="file">pipeline/eval/eval_retrieval.py</span><span class="lines">baris 38–68 (inti)</span></div><div class="code-body"><span class="cl" data-ln="38">def pas_num(p):</span><span class="cl" data-ln="39">    if not p:</span><span class="cl" data-ln="40">        return ""</span><span class="cl" data-ln="41">    m = re.search(r"(\d+)\s*([a-z])?", str(p), re.I)</span><span class="cl hl" data-ln="42">    if not m:</span><span class="cl" data-ln="43">        return str(p).lower()</span><span class="cl" data-ln="44">    return "%d%s" % (int(m.group(1)), (m.group(2) or "").lower())</span><span class="cl gap">⋯</span><span class="cl" data-ln="47">def matches(ch, exp):</span><span class="cl" data-ln="48">    if exp.get("doc_regex"):</span><span class="cl hl" data-ln="50">        # official_title UUD bisa berupa stub ("UUD 1945 Perubahan Kedua") —</span><span class="cl hl" data-ln="51">        # doc_type_full tetap memuat identitas resmi, jadi cek keduanya.</span><span class="cl" data-ln="52">        t = (ch.get("official_title") or "").lower()</span><span class="cl" data-ln="53">        tf = (ch.get("doc_type_full") or "").lower()</span><span class="cl hl" data-ln="53">        if not (re.search(exp["doc_regex"], t, re.I)</span><span class="cl hl" data-ln="53">                or re.search(exp["doc_regex"], tf, re.I)):</span></div></div></div>
+  <ol>
+    <li><b>doc_regex dicek ke official_title ATAU doc_type_full</b> (baris 50–54). Kasus nyata: judul UUD berupa stub
+    <i>“UUD”</i> (lihat Bab 03 §4), sehingga regex “undang-undang dasar” gugur meski retrieval-nya benar — versi awal eval
+    menghasilkan recall 0,250 yang <b>salah baca</b>, bukan modelnya yang buruk.</li>
+    <li><b>pas_num aman untuk pasal tanpa sufiks</b> (baris 38–44): “7” tetap “7”, “22E” menjadi “22e”, dan tidak crash
+    pada string aneh — normalisasi angka+sufiks huruf.</li>
+  </ol>
+  <p>Ada juga <b>pengulangan longgar</b> di baris 119–121: bila doc+kw cocok tapi pasal/ayat tidak persis,
+  dianggap hit — kompromi agar eval tidak terlalu kaku terhadap variasi penomoran.</p>
+
+  <!-- ===== 4. EVAL INTI ===== -->
+  <h2 id="eval">4. Inti evaluasi: exact search dengan numpy (baris 110–135)</h2>
+  <div class="code"><div class="code-head"><span class="dot"></span><span class="file">pipeline/eval/eval_retrieval.py</span><span class="lines">baris 110–125 (inti)</span></div><div class="code-body"><span class="cl hl" data-ln="110">    scores = emb @ vecs.T           # L2-normal =&gt; dot = cosine</span><span class="cl" data-ln="111">    order = np.argsort(-scores, axis=0)[: a.k, :]</span><span class="cl gap">⋯</span><span class="cl" data-ln="115">    for gi, g in enumerate(golden):</span><span class="cl" data-ln="116">        top = [ids[i] for i in order[:, gi]]</span><span class="cl" data-ln="117">        hit = any(matches(chunks[t["chunk_id"]], e)</span><span class="cl" data-ln="118">                  for e in g["expect_any"] for t in top)</span><span class="cl" data-ln="119">        if not hit:  # longgarkan: abaikan predikat pasal/ayat bila doc+kw cocok</span><span class="cl gap">⋯</span><span class="cl" data-ln="123">        hits += hit</span><span class="cl" data-ln="124">        per.append({"id": g["id"], "question": g["question"], "hit": bool(hit),</span><span class="cl" data-ln="125">                    "top_ids": [t["chunk_id"] for t in top[:5]]})</span></div></div></div>
+  <p>Satu baris 110 melakukan 12 × 63.231 perbandingan cosine sekaligus — ini <b>exact search</b> (baseline kebenaran, Bab 08).
+  Pemilihan encoder query mengikuti meta.json (baris 94–108): <code class="inline">last_token</code> →
+  <code class="inline">embed_query_qwen.encode_query</code>; selain itu mean-pool e5 dengan prefix <code class="inline">query:</code>.
+  Ambang keputusannya (baris 128 + interpretasi di report): recall ≥ 0,8 bagus; 0,6–0,8 evaluasi ulang model/top-k;
+  &lt; 0,6 jangan lanjut ke agent (kode keluar 2, baris 134–135).</p>
+
+  <!-- ===== 5. REPORT ===== -->
+  <h2 id="report">5. Membaca <code class="inline">golden_report.json</code> — recall@8 = 0,750</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="v">0.750</div><div class="l">recall@8 — 9 dari 12 query hit</div></div>
+    <div class="kpi"><div class="v">9/10</div><div class="l">= 0,90 recall atas query yang terjawab korpus</div></div>
+    <div class="kpi"><div class="v">0.250</div><div class="l">angka versi awal — salah baca matcher, bukan model</div></div>
+  </div>
+  <p>Tiga MISS yang tersisa pun sudah dianalisis jujur (README folder qwen3-06b):</p>
+  <table class="tblwrap"><table class="tbl">
+    <thead><tr><th style="width:80px">Query</th><th>Kenapa MISS (analisis resmi)</th></tr></thead>
+    <tbody>
+      <tr><td class="f">g03</td><td>Pasal 31 ayat (4) tentang 20% APBN berasal dari <b>Perubahan Keempat</b> UUD 1945 — tidak termuat di korpus (korpus hanya punya UUD asli + Perubahan Pertama &amp; Kedua)</td></tr>
+      <tr><td class="f">g04</td><td>Pasal 22E (pemilu langsung) berasal dari <b>Perubahan Ketiga</b> — idem, tidak ada di korpus</td></tr>
+      <tr><td class="f">g09</td><td>Ekspektasi <code class="inline">kw: "mencabut"</code> gagal terhadap teks berbentuk <i>“dicabut”</i> — kualitas golden set, bukan model</td></tr>
+    </tbody>
+  </table></table>
+  <p>Cuplikan per-query (asli dari report):</p>
+  <div class="code"><div class="code-head"><span class="dot"></span><span class="file">pipeline/eval/golden_report.json</span><span class="lines">g01 (HIT) &amp; g03 (MISS)</span></div><div class="code-body"><span class="cl out">g01 HIT  top-1 score  uud-1945-perubahan-pertama-1999::p::9::02</span><span class="cl out">g01 HIT     …lalu ::p::20::01, ::p::21::02, perubahan-kedua-2000::p::25e::01, ::p::15::01</span><span class="cl out">g03 MISS top-1       uud-1945-perubahan-kedua-2000::p::28c::01, ::28e::01, pp-1976::p::126::40…</span></div></div></div>
+  <p class="dim">Kedua report (pipeline/eval/golden_report.json dan salinannya di folder model qwen3-06b) memuat 12 entri per_query
+  dengan 5 top_ids masing-masing — layak dijelajahi langsung.</p>
+
+  <h2 id="ringkasan">6. Ringkasan bab</h2>
+  <ul>
+    <li>Encoder query Qwen3: <code class="inline">Instruct:/Query:</code> + last-token pooling + keep_dim MRL — parameter dari meta.json.</li>
+    <li>Eval = exact search numpy + matcher predikat (doc_regex ke dua field, pas_num aman) + longgarkan bila doc+kw cocok.</li>
+    <li>Recall@8 resmi: <b>0,750</b>; 0,90 atas query yang terjawab korpus; 3 MISS punya analisis akar-masalah.</li>
+    <li>Ambang tindakan: ≥0,8 lanjut · 0,6–0,8 evaluasi ulang · &lt;0,6 berhenti &amp; perbaiki.</li>
+  </ul>
+  <div class="tip"><b>Istilah baru bab ini:</b> <a class="term" href="10-glosarium.html#recall">recall@k</a>,
+  <a class="term" href="10-glosarium.html#golden">golden queries</a>, <a class="term" href="10-glosarium.html#matcher">matcher</a>,
+  <a class="term" href="10-glosarium.html#regex">regex</a>, <a class="term" href="10-glosarium.html#stub">stub judul</a>.</div>
+
+  <div class="footnav">
+    <a href="06-milvus-retrieval.html"><span class="dir">← Kembali</span><br><span class="tt">Milvus &amp; Retrieval (Bab 06)</span></a>
+    <a href="08-hnsw-ivf-flat.html" class="next"><span class="dir">Lanjut · Bab 08</span><br><span class="tt">HNSW vs IVF vs FLAT →</span></a>
+  </div>
+
+  <div class="attrib">Sumber: <code>pipeline/embed_query_qwen.py</code> (98 baris), <code>pipeline/eval/eval_retrieval.py</code> (139 baris),
+  <code>eval/golden_queries.jsonl</code> (12 query), <code>eval/golden_report.json</code>, README folder qwen3-06b (analisis MISS).</div>
+</div>
+</body>
+</html>

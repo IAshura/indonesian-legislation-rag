@@ -1,0 +1,18 @@
+# Sample questions (English glosses + original Indonesian queries)
+# Source: docs/examples/sample-questions.txt (was 5_question.txt)
+# Note: q4 (PP 13/2009) is NOT in the 378-doc corpus — correct answer is "No basis found in corpus."
+
+[q1] What is Indonesia's form of state, who holds law-making power, and what religious guarantee exists under the 1945 Constitution?
+ID: Bagaimana bentuk negara Indonesia, siapa pemegang kekuasaan membentuk undang-undang, dan apa jaminan beragama menurut UUD 1945?
+
+[q2] How long is the presidential term and who holds judicial power under the 1945 Constitution?
+ID: Berapa lama masa jabatan Presiden dan siapa pemegang kekuasaan kehakiman menurut UUD 1945?
+
+[q3] Which institution is authorized to make laws in Indonesia?
+ID: Lembaga apa yang berwenang membuat undang-undang di Indonesia?
+
+[q4] What does Article 1 of Government Regulation No. 13 of 2009 contain? (out-of-corpus — expect no-basis answer)
+ID: Apa isi Pasal 1 Peraturan Pemerintah Nomor 13 Tahun 2009?
+
+[q5] In whose hands does sovereignty lie and what are the requirements to become President under the 1945 Constitution?
+ID: Di tangan siapa kedaulatan berada dan apa syarat menjadi Presiden menurut UUD 1945?

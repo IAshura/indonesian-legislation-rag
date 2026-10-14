@@ -2,7 +2,7 @@
 bridge.py — Jembatan ke mesin RAG yang SUDAH ADA (tanpa menulis-ulang logika).
 ==============================================================================
 
-Folder `rag-tanpa-framework/` memuat seluruh kecerdasan retrieval:
+Folder `rag-vanilla/` holds all retrieval intelligence:
   embedder.py   : pertanyaan -> vektor (Qwen3-Embedding, instruksi dari meta.json)
   retriever.py  : ExactRetriever (cosine exact), HybridRetriever (dense+BM25->RRF),
                   konteks_kaya (small-to-big), fusi_rrf
@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]   # .../Indonesian legislation .../
-RAG_DIR = PROJECT_ROOT / "rag-tanpa-framework"
+RAG_DIR = PROJECT_ROOT / "rag-vanilla"
 ENB_ROOT = PROJECT_ROOT / "pipeline" / "result" / "embeddings"
 
 if str(RAG_DIR) not in sys.path:

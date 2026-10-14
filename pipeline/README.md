@@ -1,4 +1,8 @@
-# Dataset RAG Peraturan Indonesia — Build "Combined" v4.1 (KANONIK)
+# Dataset Build — Combined v4.1 (Canonical)
+
+> English master: `docs/pipeline-guide.md`. This file is the full Indonesian build spec (kept as-is for audit precision).
+
+Dataset RAG Peraturan Indonesia — Build "Combined" v4.1 (KANONIK)
 
 Dataset siap-embed peraturan Indonesia (378 peraturan, 1945–2024; korpus
 Mendeley Data DOI `10.17632/8wpjvhh7g2.1`, **CC BY 4.0** — cantumkan atribusi:

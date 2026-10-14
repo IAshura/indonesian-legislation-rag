@@ -1,0 +1,8 @@
+# Folder ini butuh sedikit paket — torch & transformers biasanya sudah ada
+# (dipakai pipeline embedding proyek). Versi minimum disebut agar aman.
+numpy>=1.26
+requests>=2.31
+torch>=2.2
+transformers>=4.40
+# OPSIONAL: jalur pencarian Milvus (retriever.py bagian milvus_search)
+# pymilvus>=2.4

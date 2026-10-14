@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dari PDF Mentah ke Dataset RAG — Penjelasan Lengkap Pipeline</title>
+<style>
+  :root{
+    --bg:#0d1117; --bg2:#161b22; --bg3:#1c2333; --border:#2d333b; --border2:#3d444d;
+    --text:#e6edf3; --muted:#8b949e; --dim:#6e7681;
+    --blue:#58a6ff; --green:#3fb950; --orange:#d29922; --red:#f85149;
+    --purple:#bc8cff; --cyan:#39c5cf; --pink:#ff7b72; --yellow:#e3b341;
+    --mono:Consolas,"Cascadia Code",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.65;padding-bottom:80px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+  /* ===== Header ===== */
+  header{background:linear-gradient(160deg,#0d1117 0%,#10234a 60%,#0d1117 100%);border-bottom:1px solid var(--border);padding:52px 0 40px;text-align:center}
+  header h1{font-size:1.9rem;font-weight:700;letter-spacing:-.5px;margin-bottom:10px}
+  header h1 .grad{background:linear-gradient(90deg,var(--blue),var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p.sub{color:var(--muted);font-size:1.02rem;max-width:760px;margin:0 auto 22px}
+  .stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .stat{background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.25);border-radius:10px;padding:10px 18px;text-align:center;min-width:118px}
+  .stat b{display:block;font-size:1.35rem;color:var(--blue)}
+  .stat span{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .stat.g b{color:var(--green)}.stat.g{border-color:rgba(63,185,80,.3);background:rgba(63,185,80,.07)}
+  .stat.o b{color:var(--orange)}.stat.o{border-color:rgba(210,153,34,.3);background:rgba(210,153,34,.07)}
+  .stat.p b{color:var(--purple)}.stat.p{border-color:rgba(188,140,255,.3);background:rgba(188,140,255,.07)}
+
+  /* ===== Section ===== */
+  section{margin-top:56px}
+  h2{font-size:1.45rem;display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  h2 .n{flex:0 0 auto;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;background:var(--bg3);border:2px solid var(--blue);color:var(--blue)}
+  h2 + p.lead{color:var(--muted);margin-bottom:20px;margin-left:50px}
+  h3{font-size:1.08rem;color:var(--blue);margin:26px 0 10px}
+  h4{font-size:.95rem;color:var(--purple);margin:18px 0 8px}
+  p{margin-bottom:12px}
+  code{font-family:var(--mono);font-size:.86em;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:var(--cyan)}
+  .hl{color:var(--yellow);font-weight:600}
+  .hl-b{color:var(--blue);font-weight:600}
+  .hl-g{color:var(--green);font-weight:600}
+  .hl-r{color:var(--red);font-weight:600}
+
+  /* ===== Flow diagram ===== */
+  .flow{display:flex;flex-direction:column;gap:0;margin:26px 0}
+  .fstep{display:flex;gap:16px;position:relative;padding-bottom:26px}
+  .fstep:last-child{padding-bottom:0}
+  .fstep::before{content:"";position:absolute;left:19px;top:40px;bottom:0;width:2px;background:linear-gradient(var(--blue),var(--purple))}
+  .fstep:last-child::before{display:none}
+  .fnum{flex:0 0 40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.05rem;background:var(--bg3);border:2px solid var(--blue);color:var(--blue);z-index:1}
+  .fbody{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
+  .fbody h3{margin:0 0 4px;font-size:1.02rem}
+  .fbody .tagline{color:var(--muted);font-size:.86rem;margin-bottom:10px}
+  .chip{display:inline-block;font-size:.7rem;font-weight:600;padding:2px 9px;border-radius:20px;margin-left:8px;vertical-align:2px;letter-spacing:.4px}
+  .chip.tool{background:rgba(57,197,207,.12);color:var(--cyan);border:1px solid rgba(57,197,207,.35)}
+  .chip.file{background:rgba(188,140,255,.12);color:var(--purple);border:1px solid rgba(188,140,255,.35)}
+  .chip.done{background:rgba(63,185,80,.12);color:var(--green);border:1px solid rgba(63,185,80,.4)}
+  .chip.next{background:rgba(210,153,34,.12);color:var(--orange);border:1px solid rgba(210,153,34,.4)}
+
+  /* ===== Data blocks ===== */
+  .datablock{background:#0a0e14;border:1px solid var(--border2);border-radius:10px;margin:14px 0;overflow:hidden}
+  .dbhead{display:flex;align-items:center;gap:8px;background:var(--bg3);border-bottom:1px solid var(--border);padding:7px 14px;font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:50%}
+  .dbhead .fn{color:var(--cyan)}
+  pre{font-family:var(--mono);font-size:.8rem;line-height:1.6;padding:14px 16px;overflow-x:auto;white-space:pre;color:#c9d1d9}
+  .k{color:var(--pink)} .s{color:#a5d6ff} .num{color:var(--yellow)} .bool{color:var(--red)} .nul{color:var(--dim);font-style:italic} .cm{color:var(--dim);font-style:italic}
+
+  /* ===== Tables ===== */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.85rem}
+  th{background:var(--bg3);color:var(--blue);text-align:left;padding:9px 12px;border:1px solid var(--border);font-size:.76rem;text-transform:uppercase;letter-spacing:.5px}
+  td{padding:8px 12px;border:1px solid var(--border);vertical-align:top;color:#c9d1d9}
+  td.col-name{font-family:var(--mono);font-size:.78rem;color:var(--cyan);white-space:nowrap}
+  td.mono{font-family:var(--mono);font-size:.78rem}
+  tr:hover td{background:rgba(88,166,255,.04)}
+  .req{color:var(--pink);font-weight:700}
+
+  /* ===== Badges / flags ===== */
+  .flag{display:inline-block;font-family:var(--mono);font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:6px;margin:2px 4px 2px 0}
+  .f-ok{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.4)}
+  .f-sh{background:rgba(210,153,34,.15);color:var(--orange);border:1px solid rgba(210,153,34,.4)}
+  .f-oo{background:rgba(248,81,73,.15);color:var(--red);border:1px solid rgba(248,81,73,.4)}
+  .f-he{background:rgba(88,166,255,.15);color:var(--blue);border:1px solid rgba(88,166,255,.4)}
+  .f-ad{background:rgba(188,140,255,.15);color:var(--purple);border:1px solid rgba(188,140,255,.4)}
+
+  /* ===== Funnel ===== */
+  .funnel{margin:20px 0}
+  .frow{display:grid;grid-template-columns:250px 1fr 105px;gap:12px;align-items:center;margin-bottom:9px}
+  .frow .lbl{font-size:.83rem;color:var(--muted);text-align:right}
+  .frow .lbl b{color:var(--text)}
+  .barwrap{background:var(--bg3);border-radius:6px;height:26px;overflow:hidden;border:1px solid var(--border)}
+  .bar{height:100%;border-radius:5px;display:flex;align-items:center;padding-left:10px;font-family:var(--mono);font-size:.74rem;font-weight:600;color:#0d1117;min-width:fit-content;white-space:nowrap}
+  .frow .val{font-family:var(--mono);font-size:.8rem;color:var(--text)}
+  .b-blue{background:linear-gradient(90deg,#1f6feb,#58a6ff)}
+  .b-green{background:linear-gradient(90deg,#238636,#3fb950)}
+  .b-orange{background:linear-gradient(90deg,#9e6a03,#d29922)}
+  .b-purple{background:linear-gradient(90deg,#8957e5,#bc8cff)}
+  .b-red{background:linear-gradient(90deg,#b62324,#f85149)}
+  .b-cyan{background:linear-gradient(90deg,#1b7c83,#39c5cf)}
+
+  /* ===== Callout ===== */
+  .callout{border-radius:10px;padding:14px 18px;margin:16px 0;font-size:.9rem;border:1px solid;display:flex;gap:12px}
+  .callout .ico{font-size:1.2rem;flex:0 0 auto}
+  .c-info{background:rgba(88,166,255,.07);border-color:rgba(88,166,255,.35)}
+  .c-warn{background:rgba(210,153,34,.07);border-color:rgba(210,153,34,.35)}
+  .c-good{background:rgba(63,185,80,.07);border-color:rgba(63,185,80,.35)}
+  .c-bad{background:rgba(248,81,73,.07);border-color:rgba(248,81,73,.35)}
+
+  /* ===== RAG simulation ===== */
+  .ragbox{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin:18px 0}
+  .ragstep{display:flex;gap:14px;margin-bottom:16px;align-items:flex-start}
+  .ragstep:last-child{margin-bottom:0}
+  .ragico{flex:0 0 34px;height:34px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:1rem}
+  .ragstep .rt{font-size:.88rem}
+  .arrow-down{text-align:center;color:var(--dim);font-size:1.1rem;margin:-6px 0 10px}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:820px){.two-col{grid-template-columns:1fr}.frow{grid-template-columns:150px 1fr 90px}.frow .lbl{font-size:.72rem}}
+
+  footer{margin-top:70px;border-top:1px solid var(--border);padding-top:24px;color:var(--dim);font-size:.82rem;text-align:center}
+  footer code{color:var(--muted)}
+  .toc{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 0}
+  .toc a{font-size:.78rem;color:var(--blue);text-decoration:none;border:1px solid rgba(88,166,255,.3);border-radius:20px;padding:4px 13px;background:rgba(88,166,255,.06)}
+  .toc a:hover{background:rgba(88,166,255,.15)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Dari PDF Mentah menjadi <span class="grad">Dataset RAG Siap Pakai</span></h1>
+    <p class="sub">Penjelasan lengkap pipeline <b>"Indonesian Legislation as Data"</b> — dengan contoh data <u>nyata</u> yang diambil langsung dari file di folder ini, mengikuti satu peraturan yang sama (UUD 1945 Perubahan Kedua, Pasal 18) dari PDF sampai siap di-embed.</p>
+    <div class="stats">
+      <div class="stat"><b>378</b><span>Peraturan</span></div>
+      <div class="stat"><b>90.588</b><span>Unit Norma</span></div>
+      <div class="stat g"><b>74.218</b><span>Chunks Siap</span></div>
+      <div class="stat o"><b>2.209</b><span>Quarantine</span></div>
+      <div class="stat p"><b>98%</b><span>QA Provenance</span></div>
+    </div>
+    <div class="toc">
+      <a href="#t1">1 Akuisisi</a><a href="#t2">2 Ekstraksi</a><a href="#t3">3 Pembersihan</a><a href="#t4">4 Segmentasi</a><a href="#t5">5 Identitas</a><a href="#t6">6 Audit Mutu</a><a href="#t7">7 Build v4.1</a><a href="#t8">8 Embedding &amp; RAG</a><a href="#funnel">Funnel</a><a href="#ringkas">Ringkasan</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ===================== OVERVIEW ===================== -->
+<section>
+  <h2><span class="n">🗺</span> Peta Besar: Dua Rangkaian Tahap</h2>
+  <p class="lead">Pipeline terdiri dari dua rangkaian: <b>Tahap A</b> (korpus Mendeley — sudah selesai, hasilnya <code>units.csv</code> / <code>documents.csv</code> / <code>texts/</code>) dan <b>Tahap B</b> (build v4.1 Anda — mengubah korpus menjadi dataset siap-embed di <code>dataset_ready/combined/result/</code>). Contoh data di bawah semuanya asli.</p>
+
+  <div class="callout c-info"><span class="ico">🎯</span><div>
+    <b>Kisah contoh yang dipakai di seluruh halaman ini:</b> satu ayat hukum nyata — <span class="hl">Pasal 18 Ayat (1) UUD 1945 Perubahan Kedua</span> — diikuti langkah demi langkah: bagaimana ayat itu keluar dari PDF, masuk ke CSV, menjadi chunk, digabung ke parent, lolos QA, dan akhirnya siap dijadikan vektor untuk retrieval.
+  </div></div>
+</section>
+
+<!-- ===================== TAHAP 1 ===================== -->
+<section id="t1">
+  <h2><span class="n">1</span> Akuisisi — Mengumpulkan PDF Resmi <span class="chip tool">Tahap A</span></h2>
+  <p class="lead">378 PDF peraturan diunduh dari portal JDIH pemerintah (peraturan.go.id, JDIH Bawaslu, dll.), disimpan sebagai <b>file sumber immutabel</b> dalam folder per jenis peraturan.</p>
+
+  <div class="datablock">
+    <div class="dbhead"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp; struktur sumber (PDF <u>tidak ikut didistribusikan</u> — hanya direkam identitasnya)</div>
+<pre><span class="cm">data-source/</span>
+├── 01-UUD/          <span class="s">UUD 1945 Perubahan Kedua_2000.pdf</span>   <span class="cm">← contoh kita</span>
+├── 02-TAPMPR/
+├── 03-UU/           <span class="s">UU-NO-7-TAHUN_2017.pdf</span>
+├── 04-PERPPU/  05-PP/  06-PERPRES/  07-PERMEN/
+└── 08-PERLEMBAGA/   <span class="s">Bawaslu_NOMOR  15 TAHUN_2012.pdf</span>  <span class="cm">(folder campuran: PerKPU, PerBawaslu, DKPP…)</span></pre>
+  </div>
+
+  <div class="callout c-warn"><span class="ico">⚠️</span><div><b>Jebakan yang diketahui:</b> nama file sering <span class="hl-r">salah</span>. Audit penulis menemukan hanya ±19% nama file akurat. Contoh nyata dari <code>scripts/audit_identitas.py</code>: file <code>PERLEMBAGA_Nomor_3_Tahun_2019.pdf</code> ternyata isinya <b>PKPU 9/2019</b>. Karena itu identitas tidak boleh diambil dari nama file → lihat Tahap 5.</div></div>
+</section>
+
+<!-- ===================== TAHAP 2 ===================== -->
+<section id="t2">
+  <h2><span class="n">2</span> Ekstraksi Teks — PDF → Teks Per-Halaman <span class="chip tool">pypdf</span> <span class="chip file">texts/</span></h2>
+  <p class="lead">Setiap PDF dikonversi menjadi satu file teks polos. Batas halaman <b>eksplisit</b> dengan penanda <code>=== PAGE n ===</code>, dan setiap baris non-kosong punya <b>nomor urut stabil</b> dalam halamannya. Ini fondasi seluruh sistem provenance.</p>
+
+  <div class="datablock">
+    <div class="dbhead"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp; <span class="fn">texts/01-UUD/UUD 1945 Perubahan Kedua_2000.txt</span> — potongan asli, halaman 1</div>
+<pre><span class="k">=== PAGE 1 ===</span>                    <span class="cm">← penanda halaman 1</span>
+<span class="s">PERUBAHAN KEDUA UNDANG-UNDANG DASAR NEGARA REPUBLIK INDONESIA</span>   <span class="cm">← baris 1</span>
+<span class="s">TAHUN 1945 DENGAN RAHMAT TUHAN YANG MAHA ESA</span>                 <span class="cm">← baris 2</span>
+<span class="s">MAJELIS PERMUSYAWARATAN RAKYAT REPUBLIK INDONESIA,</span>           <span class="cm">← baris 3</span>
+<span class="s">Setelah mempelajari, menelaah, dan mempertimbangkan …</span>        <span class="cm">← baris 4</span>
+<span class="cm">…</span>
+<span class="s">(1) Negara Kesatuan Republik Indonesia dibagi atas daerah-daerah</span>  <span class="cm">← baris 16 ★ AYAT KITA</span>
+<span class="s">provinsi dan daerah provinsi itu dibagi atas kabupaten dan kota,</span>  <span class="cm">← baris 17</span>
+<span class="s">yang tiap-tiap provinsi, kabupaten, dan kota mempunyai pemerintah</span> <span class="cm">← baris 18</span>
+<span class="s">daerah, yang diatur dengan undang-undang.</span></pre>
+  </div>
+
+  <p>Alamat <span class="hl-b">halaman 1, baris 16–18</span> inilah yang nanti direkam di <code>units.csv</code> dan diwarisi chunk — sehingga <b>setiap potongan norma bisa diverifikasi balik ke teks aslinya</b> (<i>provenance contract</i>).</p>
+</section>
+
+<!-- ===================== TAHAP 3 ===================== -->
+<section id="t3">
+  <h2><span class="n">3</span> Pembersihan Furniture Halaman <span class="chip tool">line-level rules</span></h2>
+  <p class="lead">Sebelum disegmentasi, baris-baris "furniture" — jejak repositori, header Buku/Berita Negara, nomor lembar — dihapus dengan aturan pola yang <b>dicatat dalam log</b>.</p>
+
+  <div class="datablock">
+    <div class="dbhead"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp; pola nyata dari <span class="fn">scripts/periksa_build.py</span> (QA pembersihan)</div>
+<pre><span class="cm"># Pola watermark yang WAJIB nol setelah build:</span>
+<span class="k">djpp.*  |  hukumonline.com  |  peraturan.go.id  |  jdih*.go.id</span>
+
+<span class="cm"># KECUALI 4 alamat sah yang muncul di dalam rumusan norma (harus selamat):</span>
+<span class="hl-g">elhkpn.kpk.go.id  ·  kpk.go.id  ·  bawaslu.go.id  ·  polri.go.id</span></pre>
+  </div>
+
+  <div class="two-col">
+    <div class="callout c-good"><span class="ico">✂️</span><div><b>Dihapus:</b> footer situs sumber, header lembar negara, folio/penanda halaman ganda.</div></div>
+    <div class="callout c-warn"><span class="ico">🚩</span><div><b>Diflag, tidak dihapus:</b> frasa yang juga muncul di dalam sitasi sah — pembersihan tidak boleh memakan isi norma.</div></div>
+  </div>
+</section>
+
+<!-- ===================== TAHAP 4 ===================== -->
+<section id="t4">
+  <h2><span class="n">4</span> Segmentasi Hierarkis — Teks → Unit Norma <span class="chip file">units.csv</span></h2>
+  <p class="lead">Baris bersih dipotong mengikuti hierarki drafting hukum Indonesia: <code>BAB → Paragraf → Pasal → ayat</code>. Heading dibawa (carry) sebagai status; unit ditutup di akhir kalimat. Hasilnya <b>90.588 unit</b>, satu baris CSV per unit.</p>
+
+  <h3>Contoh nyata — ayat kita menjadi baris CSV (unit_id 400519)</h3>
+  <table>
+    <tr><th style="width:200px">Kolom <code>units.csv</code></th><th>Nilai baris 400519</th><th style="width:280px">Arti</th></tr>
+    <tr><td class="col-name">unit_id</td><td class="mono">400519</td><td>ID unik, tidak pernah berubah oleh pemrosesan</td></tr>
+    <tr><td class="col-name">document_name</td><td class="mono">UUD 1945 Perubahan Kedua_2000.pdf</td><td>Dokumen sumber</td></tr>
+    <tr><td class="col-name">doc_type / hierarchy_level</td><td class="mono">UUD / 1</td><td>Jenis &amp; posisi tangga UU 12/2011 (UUD = puncak)</td></tr>
+    <tr><td class="col-name">year</td><td class="mono">1945</td><td>Tahun peraturan</td></tr>
+    <tr><td class="col-name">page_number</td><td class="mono"><span class="hl">1</span></td><td rowspan="3">★ <b>Alamat provenance</b> → file <code>texts/01-UUD/…txt</code> hal. 1 baris 16–18 (persis snippet Tahap 2)</td></tr>
+    <tr><td class="col-name">line_start</td><td class="mono"><span class="hl">16</span></td></tr>
+    <tr><td class="col-name">line_end</td><td class="mono"><span class="hl">18</span></td></tr>
+    <tr><td class="col-name">unit_type</td><td class="mono">body</td><td>Isi norma (bukan heading)</td></tr>
+    <tr><td class="col-name">pasal_marker</td><td class="mono">"Pasal 18"</td><td>Penanda struktur yang sedang dibawa</td></tr>
+    <tr><td class="col-name">ayat_marker</td><td class="mono">"1"</td><td>Ayat (1) — unit satu-ayat</td></tr>
+    <tr><td class="col-name">text_original</td><td class="mono">"(1) Negara Kesatuan Republik Indonesia dibagi atas daerah-daerah provinsi…"</td><td>Teks apa adanya</td></tr>
+    <tr><td class="col-name">indobert_token_count</td><td class="mono"><span class="hl-g">44</span> token</td><td rowspan="3">Audit kualitas IndoBERT → cukup panjang, 0 token [UNK] → <span class="flag f-ok">ok</span></td></tr>
+    <tr><td class="col-name">indobert_unk_ratio</td><td class="mono">0.0</td></tr>
+    <tr><td class="col-name">quality_flag</td><td><span class="flag f-ok">ok</span></td></tr>
+  </table>
+
+  <div class="callout c-info"><span class="ico">📜</span><div><b>Aturan penting segmentasi:</b> hanya <code>bab</code> &amp; <code>pasal</code> yang di-carry-forward; <span class="hl">ayat tidak pernah di-carry dan tidak pernah dikarang</span>. <code>ayat = null</code> berarti pasal satu-norma — sah menurut Lampiran UU 12/2011 &amp; Akoma Ntoso.</div></div>
+</section>
+
+<!-- ===================== TAHAP 5 ===================== -->
+<section id="t5">
+  <h2><span class="n">5</span> Identitas &amp; Klasifikasi Hukum <span class="chip file">documents.csv</span></h2>
+  <p class="lead">Untuk <b>tiap dokumen</b>, jenis/nomor/tahun dibaca dari <b>blok judul dokumen itu sendiri</b> (dipotong di marker pertama: <i>Menimbang / Mengingat / Memutuskan</i>), lalu diklasifikasikan dua sumbu menurut UU 12/2011.</p>
+
+  <div class="two-col">
+    <div class="callout c-info"><span class="ico">⚖️</span><div><b>Sumbu I — "I-ladder"</b> (Pasal 7 ayat 1): tangga peraturan<br><span class="mono" style="font-size:.8rem">UUD → TAP MPR → UU/PERPPU → PP → PERPRES</span></div></div>
+    <div class="callout c-info"><span class="ico">🪜</span><div><b>Sumbu II — "II-delegated"</b> (Pasal 8): kekuatan delegasi<br><span class="mono" style="font-size:.8rem">PERMEN, PerKPU, PerBawaslu, DKPP, Polri, MA…</span></div></div>
+  </div>
+
+  <h3>Contoh nyata — baris <code>documents.csv</code> (Bawaslu 15/2012)</h3>
+  <table>
+    <tr><th style="width:210px">Kolom</th><th>Nilai</th></tr>
+    <tr><td class="col-name">file_name</td><td class="mono">Bawaslu_NOMOR  15 TAHUN_2012.pdf</td></tr>
+    <tr><td class="col-name">title_block_type</td><td class="mono"><span class="hl-g">PERBAWASLU</span> ← dibaca dari isi, bukan nama file</td></tr>
+    <tr><td class="col-name">number / year (filename vs title)</td><td class="mono">15/2012 = 15/2012 → <span class="flag f-ok">mismatch=0</span></td></tr>
+    <tr><td class="col-name">legal_force_axis</td><td class="mono">II-delegated</td></tr>
+    <tr><td class="col-name">title_block_excerpt</td><td class="mono" style="font-size:.72rem">"…PERATURAN BADAN PENGAWAS PEMILIHAN UMUM… NOMOR 15 TAHUN 2012 TENTANG TATA CARA PENYELESAIAN SENGKETA PEMILIHAN UMUM…" <span class="cm">← bukti asli</span></td></tr>
+  </table>
+
+  <div class="callout c-bad"><span class="ico">🚨</span><div><b>Kasus nyata yang membuktikan tahap ini krusial</b> (dari <code>audit_identitas.py</code>):<br>
+  <code>PERLEMBAGA_Nomor_3_Tahun_2019.pdf</code> → isinya <span class="hl-r">PKPU 9/2019</span> · <code>PERLEMBAGA_Nomor_19_Tahun_2014.pdf</code> → isinya <span class="hl-r">PKPU 3/2019</span> — ditemukan <b>29 file mismatch</b>. Jika tahun salah, asas <i>lex posterior</i> dan pemilahan hierarki ikut salah.</div></div>
+</section>
+
+<!-- ===================== TAHAP 6 ===================== -->
+<section id="t6">
+  <h2><span class="n">6</span> Audit Kualitas per Unit <span class="chip tool">IndoBERT tokenizer</span></h2>
+  <p class="lead">Setiap unit dinilai otomatis: panjang token &amp; rasio <code>[UNK]</code> diukur dengan tokenizer IndoBERT, lalu diberi <code>quality_flag</code> (logika nyata dari <code>corpus_service.py</code> fungsi <code>_quality_flag</code>).</p>
+
+  <table>
+    <tr><th style="width:210px">Flag</th><th>Kapan</th><th>Contoh nyata</th></tr>
+    <tr><td><span class="flag f-ok">ok</span></td><td>≥4 token, ≥18 karakter, rasio [UNK] &lt; 25%</td><td class="mono">unit 400519 (44 token, 0.0) → ok</td></tr>
+    <tr><td><span class="flag f-he">structural_heading</span></td><td>Semua heading BAB/Paragraf/Pasal — label konteks, bukan norma</td><td class="mono">"Pasal 18" → structural_heading</td></tr>
+    <tr><td><span class="flag f-ad">structural_admin</span></td><td>Serpihan administratif: blok tanda tangan, header Lembaran Negara, "cukup jelas", nomor "12/34"</td><td class="mono">"WAKIL KETUA, Ttd." → structural_admin</td></tr>
+    <tr><td><span class="flag f-sh">needs_review_short</span></td><td>Terlalu pendek (&lt;4 token / &lt;18 char) — kandidat serpihan</td><td class="mono">fragmen <span class="mono">&lt; 8 token</span> → is_fragment</td></tr>
+    <tr><td><span class="flag f-oo">needs_review_oov</span></td><td>Rasio [UNK] ≥ 25% — teks kotor/simbol aneh</td><td class="mono">hasil OCR rusak → needs_review_oov</td></tr>
+  </table>
+</section>
+
+<!-- ===================== TAHAP 7 ===================== -->
+<section id="t7">
+  <h2><span class="n">7</span> Build v4.1 — Korpus → Dataset Siap Embed <span class="chip tool">build_dataset.py</span> <span class="chip file">result/*.jsonl</span> <span class="chip done">SELESAI</span></h2>
+  <p class="lead">Builder deterministik (seed 20260907) membaca <code>units.csv</code> + <code>documents.csv</code> + <code>texts/</code> dan menghasilkan 7 file output. Ikuti ayat kita (unit <b>400519</b>) melewati tahap ini:</p>
+
+  <h3>7a. Baris unit → chunk (1 unit = 1 chunk, ID tak berubah)</h3>
+  <div class="datablock">
+    <div class="dbhead"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp; <span class="fn">result/chunks.jsonl</span> — baris ke-4, data ASLI</div>
+<pre>{
+  <span class="k">"chunk_id"</span>: <span class="s">"uud-1945-perubahan-kedua-2000::p::18::01"</span>,   <span class="cm">← global &amp; stabil, siap jadi payload vector DB</span>
+  <span class="k">"parent_id"</span>: <span class="s">"uud-1945-perubahan-kedua-2000::p::18"</span>,      <span class="cm">← penunjuk ke pasal utuh</span>
+  <span class="k">"document_id"</span>: <span class="s">"uud-1945-perubahan-kedua-2000"</span>,
+  <span class="k">"official_title"</span>: <span class="s">"UUD 1945 Perubahan Kedua"</span>,
+  <span class="k">"citation"</span>: { <span class="k">"pasal"</span>: <span class="s">"Pasal 18"</span>, <span class="k">"ayat"</span>: <span class="s">"1"</span> },
+  <span class="k">"citation_str"</span>: <span class="s">"Pasal 18 Ayat (1)"</span>,
+  <span class="k">"content_role"</span>: <span class="s">"norma"</span>, <span class="k">"role_source"</span>: <span class="s">"marker"</span>,       <span class="cm">← peran granular + jejak putusan</span>
+  <span class="k">"part"</span>: <span class="s">"norma"</span>, <span class="k">"is_fragment"</span>: <span class="bool">false</span>,
+  <span class="k">"doc_type"</span>: <span class="s">"UUD"</span>, <span class="k">"legal_force_axis"</span>: <span class="s">"I-ladder"</span>,
+  <span class="k">"hierarchy_level"</span>: <span class="num">1</span>, <span class="k">"year"</span>: <span class="num">1945</span>, <span class="k">"legal_status"</span>: <span class="nul">null</span>,  <span class="cm">← diisi tahap validity</span>
+  <span class="k">"text"</span>: <span class="s">"(1) Negara Kesatuan Republik Indonesia dibagi atas daerah-daerah provinsi…"</span>,
+  <span class="k">"text_lexical"</span>: <span class="s">"(1) negara kesatuan republik indonesia dibagi atas daerah-daerah…"</span>, <span class="cm">← untuk BM25</span>
+  <span class="k">"embedding_input"</span>: <span class="s">"UUD 1945 Perubahan Kedua - Pasal 18 Ayat (1): (1) Negara Kesatuan…"</span>,  <span class="cm">★</span>
+  <span class="k">"provenance"</span>: { <span class="k">"source_unit_id"</span>: <span class="num">400519</span>, <span class="k">"texts_path"</span>: <span class="s">"texts/01-UUD/UUD 1945 Perubahan Kedua_2000.txt"</span>,
+                  <span class="k">"page_number"</span>: <span class="num">1</span>, <span class="k">"line_start"</span>: <span class="num">16</span>, <span class="k">"line_end"</span>: <span class="num">18</span> },  <span class="cm">← alamat asli terbawa</span>
+  <span class="k">"char_len"</span>: <span class="num">237</span>, <span class="k">"token_estimate"</span>: <span class="num">44</span>
+}</pre>
+  </div>
+
+  <div class="callout c-good"><span class="ico">★</span><div><b><code>embedding_input</code> = judul resmi — sitasi: isi</b> (langkah 9 README). Setiap vektor jadi <i>self-contained</i>: saat retrieval, vektor "tahu" ia mencari norma tentang apa dan dari peraturan mana — konteks termahal untuk embedding hukum.</div></div>
+
+  <h3>7b. Chunk-chunk se-pasal → parent (pasal utuh)</h3>
+  <div class="datablock">
+    <div class="dbhead"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp; <span class="fn">result/parents.jsonl</span> — Pasal 18 utuh (data ASLI)</div>
+<pre>{
+  <span class="k">"parent_id"</span>: <span class="s">"uud-1945-perubahan-kedua-2000::p::18"</span>,
+  <span class="k">"parent_kind"</span>: <span class="s">"pasal"</span>, <span class="k">"citation_str"</span>: <span class="s">"Pasal 18"</span>, <span class="k">"part"</span>: <span class="s">"norma"</span>,
+  <span class="k">"child_ids"</span>: [ <span class="s">"::p::18::01"</span>, <span class="s">"::p::18::02"</span>, <span class="s">"::p::18::03"</span>, <span class="s">"::p::18::04"</span>,
+                 <span class="s">"::p::18::05"</span>, <span class="s">"::p::18::06"</span>, <span class="s">"::p::18::07"</span> ],   <span class="cm">← 7 ayat = 7 chunk anak</span>
+  <span class="k">"char_len"</span>: <span class="num">1059</span>,
+  <span class="k">"text"</span>: <span class="s">"(1) Negara Kesatuan Republik Indonesia dibagi atas daerah-daerah provinsi…\n\n(2) Pemerintah daerah provinsi…\n\n(3) … (7) Susunan dan tata cara penyelenggaraan pemerintahan daerah diatur dalam undang-undang."</span>,  <span class="cm">← PASAL UTUH</span>
+  <span class="k">"window_ids"</span>: [ <span class="s">"uud-1945-perubahan-kedua-2000::p::18::w01"</span> ]  <span class="cm">← 1 window (≤1.800 char)</span>
+}</pre>
+  </div>
+
+  <p><b>Parent &gt; 1.800 karakter</b> dipecah <span class="hl">window deterministik</span> dengan overlap 150 char (<code>window_id = {parent_id}::w{nn}</code>) — 1.632 dari 11.413 parent mengalaminya. Pasal 18 (1.059 char) cukup satu window. Ini pola <i>small-to-big</i>: <span class="hl-b">retrieval presisi di child (ayat), jawaban berkonteks pasal utuh.</span></p>
+
+  <h3>7c. Baris yang tidak layak → quarantine beralasan (bukan dibuang diam-diam)</h3>
+  <div class="datablock">
+    <div class="dbhead"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp; <span class="fn">result/quarantine.jsonl</span> — data ASLI</div>
+<pre>{ <span class="k">"reason"</span>: <span class="s">"duplicate_norm"</span>, <span class="k">"unit_id"</span>: <span class="num">400611</span>, <span class="k">"pasal"</span>: <span class="s">"Pasal 36C"</span>,
+  <span class="k">"page_number"</span>: <span class="num">6</span>, <span class="k">"line_start"</span>: <span class="num">16</span>, <span class="k">"text_preview"</span>: <span class="s">"WAKIL KETUA, Ttd."</span> }  <span class="cm">← serpihan ttd, dicatat + alasan</span></pre>
+  </div>
+
+  <h3>7d. QA provenance otomatis — gate build</h3>
+  <p>300 sampel chunk dipilih (seed tetap), isinya dicek balik ke halaman + rentang baris di <code>texts/</code> (prefix 60 char): <span class="hl-g">294 terverifikasi / 300 = 98%</span>, ambang minimal 90% → <span class="flag f-ok">qa_gate: PASS</span>. Contoh 6 kegagalan pun direkam di manifest, misalnya:</p>
+<pre>{ <span class="k">"chunk_id"</span>: <span class="s">"perlembaga-nomor-04-tahun-2011::p::4::35"</span>,
+  <span class="k">"src"</span>: <span class="s">"2011, no.376 10 a) ruang kerja dengan luas 14 m²;"</span>,   <span class="cm">← file sumber</span>
+  <span class="k">"txt"</span>: <span class="s">"10 a) ruang kerja dengan luas 14 m²;"</span>,              <span class="cm">← isi chunk</span>
+  <span class="k">"note"</span>: <span class="s">"unverified = baris penanda struktural yang dipangkas builder; isi norma tetap utuh"</span> }</pre>
+
+  <h3>7e. Berkas manifest — bukti audit build</h3>
+  <div class="datablock">
+    <div class="dbhead"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp; <span class="fn">result/manifest.json</span> — ringkasan ASLI</div>
+<pre>{
+  <span class="k">"dataset_version"</span>: <span class="s">"combined-v4.1"</span>, <span class="k">"deterministic"</span>: <span class="bool">true</span>, <span class="k">"seed"</span>: <span class="num">20260907</span>,
+  <span class="k">"license"</span>: <span class="s">"CC BY 4.0"</span>,
+  <span class="k">"counts"</span>: { <span class="k">"input_rows"</span>: <span class="num">90588</span>, <span class="k">"chunks"</span>: <span class="num">74218</span>, <span class="k">"fragments"</span>: <span class="num">4704</span>,
+              <span class="k">"parents"</span>: <span class="num">11413</span>, <span class="k">"windows"</span>: <span class="num">14689</span>, <span class="k">"quarantine"</span>: <span class="num">2209</span> },
+  <span class="k">"validation"</span>: { <span class="k">"orphan_chunks"</span>: <span class="num">0</span>, <span class="k">"duplicate_chunk_ids"</span>: <span class="num">0</span>, <span class="k">"match_rate"</span>: <span class="num">0.98</span>, <span class="k">"qa_gate"</span>: <span class="s">"PASS"</span> }
+}</pre>
+  </div>
+
+  <h3>7f. Lapisan validity — sengaja kosong (tidak menebak)</h3>
+  <div class="datablock">
+    <div class="dbhead"><span class="dot" style="background:#f85149"></span><span class="dot" style="background:#d29922"></span><span class="dot" style="background:#3fb950"></span>&nbsp; <span class="fn">result/validity.jsonl</span> — 378 baris, semua ASLI seperti ini</div>
+<pre>{ <span class="k">"document_id"</span>: <span class="s">"bawaslu-nomor-15-tahun-2012"</span>, <span class="k">"number"</span>: <span class="s">"15"</span>, <span class="k">"year"</span>: <span class="s">"2012"</span>,
+  <span class="k">"legal_status"</span>: <span class="nul">null</span>, <span class="k">"repealed_by"</span>: <span class="nul">null</span>, <span class="k">"registry_url"</span>: <span class="nul">null</span>,
+  <span class="k">"status_state"</span>: <span class="s">"pending_enrichment"</span>,
+  <span class="k">"note"</span>: <span class="s">"isi legal_status hanya dengan bukti; jangan menebak"</span> }</pre>
+  </div>
+  <div class="callout c-warn"><span class="ico">⚖️</span><div>Korpus mencakup 1945–2024 — banyak peraturan sudah dicabut. Tanpa lapisan ini, RAG bisa mengutip norma yang sudah mati. Karena parsing status portal rapuh, skrip hanya mencari <b>kandidat URL di peraturan.bpk.go.id</b> (<code>--live</code>); status hukum tetap <code>null</code> sampai diverifikasi manusia.</div></div>
+</section>
+
+<!-- ===================== TAHAP 8 ===================== -->
+<section id="t8">
+  <h2><span class="n">8</span> Embedding &amp; RAG — Tahap Berikutnya <span class="chip next">BELUM DIJALANKAN</span></h2>
+  <p class="lead">Tahap terakhir yang sengaja ditunda (README §"Tahap selanjutnya"): feed <code>embedding_input</code> ke model embedding → vektor → indeks FAISS. Simulasi di bawah ini adalah <span class="cm">ilustrasi alur</span>, vektornya belum ada.</p>
+
+  <div class="ragbox">
+    <h3 style="margin-top:0">Simulasi alur jawaban (small-to-big)</h3>
+    <div class="ragstep"><div class="ragico">❓</div><div class="rt"><b>Pertanyaan pengguna</b> (contoh query emas nyata dari <code>eval/golden_queries.jsonl</code> — g01):<br><i>"Di tangan siapa kedaulatan berada menurut UUD 1945?"</i></div></div>
+    <div class="arrow-down">↓</div>
+    <div class="ragstep"><div class="ragico">🧮</div><div class="rt"><b>Query di-embed dengan model yang SAMA</b> dengan model index (aturan besi README: model index = model query), vektor float32 L2-normal → <code>faiss.IndexFlatIP</code> (dot = cosine)</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="ragstep"><div class="ragico">🎯</div><div class="rt"><b>Retrieval child:</b> top-k chunk mirip → tertangkap <code>uud-1945-perubahan-kedua-2000::p::1::01</code> — <span class="flag f-ok">norma</span>, bukan fragmen — teksnya <i>"(2) Kedaulatan berada di tangan rakyat, dan dilaksanakan menurut Undang-Undang Dasar."</i></div></div>
+    <div class="arrow-down">↓</div>
+    <div class="ragstep"><div class="ragico">📎</div><div class="rt"><b>Join parent:</b> ambil <code>parent_id ::p::1</code> dari <code>parents.jsonl</code> → <b>Pasal 1 utuh</b> (atau window <code>::w01</code> bila panjang) sebagai konteks LLM — tanpa menembus batas token</div></div>
+    <div class="arrow-down">↓</div>
+    <div class="ragstep"><div class="ragico">💬</div><div class="rt"><b>LLM menjawab dengan sitasi terverifikasi:</b><br>
+      <span style="color:#a5d6ff">"Kedaulatan berada di tangan rakyat, dan dilaksanakan menurut Undang-Undang Dasar."</span><br>
+      <span style="font-size:.8rem;color:var(--muted)">📚 <span class="hl-g">UUD 1945 Perubahan Kedua — Pasal 1 Ayat (2)</span> · hal. provenance · legal_force_axis: I-ladder · legal_status: <i>(hasil enrich validity)</i></span></div></div>
+    <div class="callout c-info" style="margin-top:4px"><span class="ico">🧪</span><div>Sebelum dipercaya, mutu retrieval diukur: <code>eval_retrieval.py --k 8</code> atas 12 query emas (contoh di atas = g01) → recall@8 ≥ 0,8 baru lanjut produksi; setelah itu opsional gabung <b>BM25</b> (field <code>text_lexical</code> sudah disiapkan) + rerank.</div></div>
+  </div>
+</section>
+
+<!-- ===================== FUNNEL ===================== -->
+<section id="funnel">
+  <h2><span class="n">📊</span> Funnel Angka Nyata (dari manifest.json)</h2>
+  <p class="lead">Dari 90.588 baris input sampai indeks siap — <b>tidak ada satu baris pun yang hilang tanpa alasan tercatat</b>.</p>
+
+  <div class="funnel">
+    <div class="frow"><div class="lbl"><b>Baris korpus input</b></div><div class="barwrap"><div class="bar b-blue" style="width:100%">90.588 baris units.csv</div></div><div class="val">100%</div></div>
+    <div class="frow"><div class="lbl">→ menjadi <b>chunk</b></div><div class="barwrap"><div class="bar b-cyan" style="width:82%">74.218</div></div><div class="val">81,9%</div></div>
+    <div class="frow"><div class="lbl">&nbsp;&nbsp;↳ role <b>norma</b></div><div class="barwrap"><div class="bar b-green" style="width:73%">66.292</div></div><div class="val">73,2%</div></div>
+    <div class="frow"><div class="lbl">&nbsp;&nbsp;↳ fragmen (dipertahankan)</div><div class="barwrap"><div class="bar b-orange" style="width:12%">4.704</div></div><div class="val">5,2%</div></div>
+    <div class="frow"><div class="lbl">heading → label konteks</div><div class="barwrap"><div class="bar b-cyan" style="width:26%">14.161</div></div><div class="val">15,6%</div></div>
+    <div class="frow"><div class="lbl">quarantine beralasan</div><div class="barwrap"><div class="bar b-red" style="width:5%">2.209</div></div><div class="val">2,4%</div></div>
+    <div class="frow"><div class="lbl"><b>parents</b> (pasal/blok utuh)</div><div class="barwrap"><div class="bar b-purple" style="width:24%">11.413</div></div><div class="val">—</div></div>
+    <div class="frow"><div class="lbl">windows (≤1.800 char)</div><div class="barwrap"><div class="bar b-purple" style="width:30%">14.689</div></div><div class="val">—</div></div>
+  </div>
+
+  <div class="callout c-good"><span class="ico">🧮</span><div><b>Cek aritmetika:</b> 74.218 chunk + 2.209 quarantine + 14.161 heading-konteks = <span class="hl-g">90.588</span> — persis input. Zero orphan, zero duplikat ID, QA provenance 98% PASS. <b>Tiap baris terakuntabilitas.</b></div></div>
+</section>
+
+<!-- ===================== RINGKASAN ===================== -->
+<section id="ringkas">
+  <h2><span class="n">🔁</span> Mentah vs Siap Pakai — Apa yang Berubah?</h2>
+  <p class="lead">Ringkasan transformasi pada contoh ayat kita, dari PDF sampai vektor:</p>
+
+  <table>
+    <tr><th style="width:130px">Wujud</th><th>Isi</th><th style="width:230px">File</th><th style="width:110px">Status</th></tr>
+    <tr><td><b>PDF mentah</b></td><td>Halaman gazette, kolom ganda, watermark JDIH</td><td class="mono">data-source\01-UUD\…pdf</td><td><span class="chip">tidak didistribusikan</span></td></tr>
+    <tr><td><b>Teks per-halaman</b></td><td>Baris bernomor stabil, alamat provenance</td><td class="mono">texts/01-UUD/….txt (hal.1 bar.16–18)</td><td><span class="chip done">Tahap A ✅</span></td></tr>
+    <tr><td><b>Unit norma</b></td><td>Ayat (1) Pasal 18 — 1 baris CSV ber-provenance + flag mutu</td><td class="mono">units.csv (400519)</td><td><span class="chip done">✅</span></td></tr>
+    <tr><td><b>Chunk siap embed</b></td><td>Unit + judul resmi + sitasi + role + <code>embedding_input</code></td><td class="mono">chunks.jsonl (::p::18::01)</td><td><span class="chip done">✅</span></td></tr>
+    <tr><td><b>Konteks utuh</b></td><td>Pasal 18 lengkap (7 ayat) + window ≤1.800 char</td><td class="mono">parents.jsonl / parents_windows.jsonl</td><td><span class="chip done">✅</span></td></tr>
+    <tr><td><b>Vektor &amp; indeks</b></td><td><code>embedding_input</code> → float32 L2-normal → FAISS</td><td class="mono">result/embeddings/</td><td><span class="chip next">tahap berikutnya</span></td></tr>
+    <tr><td><b>Status hukum</b></td><td><code>legal_status</code> terisi berbasis bukti → payload vector DB</td><td class="mono">validity.jsonl</td><td><span class="chip next">tahap berikutnya</span></td></tr>
+  </table>
+
+  <div class="callout c-good"><span class="ico">🏁</span><div><b>Simpulan:</b> dataset sudah menempuh 7 dari 8 tahap dengan bukti terukur (QA 98% PASS, 0 orphan, 0 duplikat). Sisa 1 tahap (embedding) plus pelengkap produksi (validity + eval recall) — semuanya sudah disiapkan skripnya, tinggal dieksekusi: <code>embed_example.py</code> → <code>eval_retrieval.py</code> → <code>enrich_validity.py --live</code>.</div></div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Sumber: <code>dataset_ready/combined/README.md</code> · <code>result/manifest.json</code> · <code>scripts/corpus_service.py</code> · <code>units.csv</code> (baris 400519) · <code>result/chunks.jsonl</code> · <code>result/parents.jsonl</code> · <code>result/quarantine.jsonl</code> · <code>result/validity.jsonl</code> — semua contoh data di halaman ini adalah data asli korpus <b>DOI 10.17632/8wpjvhh7g2.1</b> (CC BY 4.0).
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
