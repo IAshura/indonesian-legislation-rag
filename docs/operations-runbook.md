@@ -23,7 +23,7 @@ cd C:\milvus
 docker compose down
 ```
 
-Or one-click everything (Docker → backend → frontend): `.\run_all.bat` from the repo root.
+Or one-click everything (Docker → backend → frontend): `.\start.bat` from the repo root.
 
 ## 2. Enter the project + venv
 

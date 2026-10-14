@@ -24,7 +24,7 @@
 
 ```
 ├── README.md                  ← this file (single entry point)
-├── run_all.bat                ← one-click launcher (Docker/Milvus → backend :8000 → frontend :3000)
+├── start.bat                  ← one-click launcher (Docker/Milvus → backend :8000 → frontend :3000)
 ├── requirements.txt           ← single-door Python deps
 ├── data/corpus/               ← untouched Mendeley v1 corpus (checksums.md5 = integrity)
 │   ├── units.csv              ← 90,588 norm units + provenance + IndoBERT audit
@@ -73,7 +73,7 @@
 
 ```powershell
 # 0. One-click (recommended): Docker/Milvus → backend → frontend
-.\run_all.bat
+.\start.bat
 #    frontend: http://localhost:3000
 #    backend:  http://127.0.0.1:8000/api/health  (must be ok:true)
 
