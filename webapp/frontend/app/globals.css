@@ -286,9 +286,12 @@ button { font: inherit; }
 .kanan-tabs button.aktif { color: var(--text); background: var(--panel-3); box-shadow: var(--shadow); }
 .kanan-body { flex: 1; overflow: auto; padding: 14px; min-height: 0; }
 
-/* legacy right-col/resizer: drawer replaces them; keep selectors harmless */
+/* legacy right-col: drawer replaces it; keep selector harmless */
 .right-col { display: contents; }
-.resizer-kanan { display: none; }
+/* drag handle between chat and docked panel */
+.resizer-kanan { width: 6px; min-width: 6px; cursor: col-resize; background: transparent;
+                 transition: background .15s; flex: none; }
+.resizer-kanan:hover, .resizer-kanan.aktif { background: var(--accent); }
 
 /* ---------- settings content ---------- */
 .set-group { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-2); margin-bottom: 10px; overflow: hidden; }

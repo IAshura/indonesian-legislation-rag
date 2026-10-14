@@ -56,6 +56,20 @@ export default function Halaman() {
   const [sidebarTutup, setSidebarTutup] = useState(false);
   const [drawer, setDrawer] = useState<null | "setting" | "graf">(null);
   const [cari, setCari] = useState("");
+  // docked panel width (draggable via the handle between chat and panel)
+  const [lebarKanan, setLebarKanan] = useState(400);
+  const dragKanan = useRef<{ sx: number; awal: number } | null>(null);
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      if (!dragKanan.current) return;
+      const w = dragKanan.current.awal + (dragKanan.current.sx - e.clientX);
+      setLebarKanan(Math.max(300, Math.min(640, w)));
+    };
+    const up = () => { dragKanan.current = null; document.body.style.cursor = ""; };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    return () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+  }, []);
   // Esc closes the floating drawer
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setDrawer(null); };
@@ -340,13 +354,20 @@ export default function Halaman() {
         </section>
 
         {/* ================= right: docked panel ================= */}
-        <aside className={`drawer ${drawer ? "open" : ""}`} data-testid="panel-kanan">
+        {drawer && (
+          <div className="resizer-kanan" data-testid="resizer-kanan"
+               title={T("page.resize.tip")}
+               onMouseDown={(e) => { dragKanan.current = { sx: e.clientX, awal: lebarKanan };
+                 document.body.style.cursor = "col-resize"; }} />
+        )}
+        <aside className={`drawer ${drawer ? "open" : ""}`} data-testid="panel-kanan"
+               style={drawer ? { width: lebarKanan, minWidth: lebarKanan, maxWidth: lebarKanan } : undefined}>
           <div className="drawer-head">
             <div className="kanan-tabs">
-              <button className={drawer === "setting" ? "aktif" : ""} data-tip={T("page.tab.setting.tip")}
-                      onClick={() => setDrawer("setting")}>⚙️ {T("page.tab.setting")}</button>
               <button className={drawer === "graf" ? "aktif" : ""} data-tip={T("page.tab.graf.tip")}
                       onClick={() => setDrawer("graf")}>📊 {T("page.tab.graf")}</button>
+              <button className={drawer === "setting" ? "aktif" : ""} data-tip={T("page.tab.setting.tip")}
+                      onClick={() => setDrawer("setting")}>⚙️ {T("page.tab.setting")}</button>
             </div>
             <button className="icon-btn" onClick={() => setDrawer(null)}>✕</button>
           </div>
