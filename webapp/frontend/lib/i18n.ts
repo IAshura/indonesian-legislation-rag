@@ -117,7 +117,7 @@ const ID: Record<string, string> = {
   "chat.hint": "Jawaban hanya dari teks peraturan — selalu periksa sitasi [S1], [S2].",
   "chat.nalar.judul": "💭 Cara berpikir model (klik untuk buka/tutup)",
   // ---- page: sidebar / topbar / tab ----
-  "page.baru": "+ Riwayat baru", "page.baru.tip": "Mulai chat baru",
+  "page.baru": "Percakapan baru", "page.baru.tip": "Mulai chat baru",
   "page.kosong": "Belum ada riwayat. Pertanyaan pertama akan tersimpan otomatis.",
   "page.kosong.q": "(kosong)",
   "page.hapus": "Hapus", "page.hapus.tip": "Hapus riwayat ini",
@@ -270,7 +270,7 @@ const EN: Record<string, string> = {
   "chat.hint": "Answers come only from regulation text — always check citations [S1], [S2].",
   "chat.nalar.judul": "💭 Model reasoning (click to expand/collapse)",
   // ---- page: sidebar / topbar / tabs ----
-  "page.baru": "+ New history", "page.baru.tip": "Start new chat",
+  "page.baru": "New chat", "page.baru.tip": "Start new chat",
   "page.kosong": "No history yet. Your first question is saved automatically.",
   "page.kosong.q": "(empty)",
   "page.hapus": "Delete", "page.hapus.tip": "Delete this history",

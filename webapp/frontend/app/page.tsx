@@ -248,10 +248,7 @@ export default function Halaman() {
                 onClick={() => setSidebarTutup((v) => !v)}>
           ☰
         </button>
-        <div className="brand">
-          <span className="mark">⚖️</span>
-          {T("page.brand.a")} <span>{T("page.brand.b")}</span>
-        </div>
+        <div className="brand">ChatBOT</div>
         {setting.dryRun && (
           <span className="tag bm25" style={{ fontSize: 11 }}>DRY-RUN</span>
         )}
@@ -259,21 +256,36 @@ export default function Halaman() {
         <div className="header-status">
           <button className="icon-btn" data-tip={T("page.bahasa.tip")}
                   onClick={gantiBahasa}>
-            🌐<span className="lbl">{L.toUpperCase()}</span>
+            <span className="lbl">{L.toUpperCase()}</span>
           </button>
           <button className="icon-btn" data-tip={T("page.tema.tip")}
-                  onClick={() => setTheme((v) => (v === "dark" ? "light" : "dark"))}>
-            {theme === "dark" ? "☀️" : "🌙"}
+                  onClick={() => setTheme((v) => (v === "dark" ? "light" : "dark"))}
+                  aria-label={T("page.tema.tip")}>
+            {theme === "dark" ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" /><path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" /><path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+              </svg>
+            )}
           </button>
           <button className={`icon-btn ${drawer === "graf" ? "on" : ""}`}
                   data-tip={T("page.tab.graf.tip")}
                   onClick={() => setDrawer((d) => (d === "graf" ? null : "graf"))}>
-            📊<span className="lbl">{T("page.tab.graf")}</span>
+            <span className="lbl">{T("page.tab.graf")}</span>
           </button>
           <button className={`icon-btn ${drawer === "setting" ? "on" : ""}`}
                   data-tip={T("page.tab.setting.tip")}
                   onClick={() => setDrawer((d) => (d === "setting" ? null : "setting"))}>
-            ⚙️<span className="lbl">{T("page.tab.setting")}</span>
+            <span className="lbl">{T("page.tab.setting")}</span>
           </button>
         </div>
       </header>
@@ -285,7 +297,7 @@ export default function Halaman() {
             <button className="btn block" data-tip={T("page.baru.tip")}
                     onClick={() => { setTurns([]); setAktifTurn(-1); setError("");
                       setTracesGraf([]); }}>
-              ＋ {T("page.baru")}
+              {T("page.baru")}
             </button>
           </div>
           <input className="side-search" value={cari} placeholder={T("page.cari")}
@@ -364,7 +376,7 @@ export default function Halaman() {
                style={drawer ? { width: lebarKanan, minWidth: lebarKanan, maxWidth: lebarKanan } : undefined}>
           <div className="drawer-head">
             <div className="drawer-title">
-              {drawer === "graf" ? `📊 ${T("page.tab.graf")}` : `⚙️ ${T("page.tab.setting")}`}
+              {drawer === "graf" ? T("page.tab.graf") : T("page.tab.setting")}
             </div>
             <div className="header-spacer" />
             <button className="icon-btn" onClick={() => setDrawer(null)}>✕</button>
