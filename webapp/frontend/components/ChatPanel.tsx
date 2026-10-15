@@ -27,6 +27,7 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
   const [teks, setTeks] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
   const [voted, setVoted] = useState<Record<number, "up" | "down">>({});
+  const [detailSitasi, setDetailSitasi] = useState<{ n: number; c?: Citation } | null>(null);
   const kirim = () => {
     if (!teks.trim() || busy) return;
     onKirim(teks.trim());
@@ -142,7 +143,8 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
                       </details>
                     )}
                     <div className="prose">
-                      <BubbleDenganSitasi text={t.text} citations={t.citations || []} cariGlobal={cariSitasi} />
+                      <BubbleDenganSitasi text={t.text} citations={t.citations || []} cariGlobal={cariSitasi}
+                                          onDetail={(c, n) => setDetailSitasi({ n, c })} />
                     </div>
                     {t.streaming && !t.text && (
                       <div style={{ fontSize: 11, color: "var(--text-faint)" }}>
@@ -275,6 +277,41 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
           <div className="disclaimer">{T("chat.disclaimer")}</div>
         </div>
       </div>
+
+      {detailSitasi && (
+        <div className="about-backdrop" onClick={() => setDetailSitasi(null)}>
+          <div className="about-card kecil" role="dialog" aria-modal="true"
+               aria-label={`[S${detailSitasi.n}]`}
+               onClick={(e) => e.stopPropagation()}>
+            <div className="about-head">
+              <div className="about-title">
+                [S{detailSitasi.n}]{detailSitasi.c ? ` ${detailSitasi.c.official_title}` : ""}
+              </div>
+              <button className="icon-btn sq" onClick={() => setDetailSitasi(null)}
+                      aria-label={T("about.tutup")}><I.x /></button>
+            </div>
+            <div className="about-body">
+              {detailSitasi.c ? (
+                <>
+                  <p><b>{detailSitasi.c.citation_str}</b>
+                    {detailSitasi.c.page != null &&
+                      ` · ${T("chat.src.hal")} ${detailSitasi.c.page}` +
+                      (detailSitasi.c.lines
+                        ? ` ${T("chat.src.baris")} ${detailSitasi.c.lines[0]}-${detailSitasi.c.lines[1]}`
+                        : "")}
+                  </p>
+                  <p style={{ whiteSpace: "pre-wrap" }}>{detailSitasi.c.text}</p>
+                </>
+              ) : (
+                <p>{T("page.sitasi.hilang")} {T("page.sitasi.hilang2")}</p>
+              )}
+            </div>
+            <button className="btn block" onClick={() => setDetailSitasi(null)}>
+              {T("about.tutup")}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -308,10 +345,11 @@ function PenalaranView({ reasoning, mentah, lang }: {
   );
 }
 
-function BubbleDenganSitasi({ text, citations, cariGlobal }: {
+function BubbleDenganSitasi({ text, citations, cariGlobal, onDetail }: {
   text: string;
   citations: Citation[];
   cariGlobal: (n: number, lokal: Citation[]) => Citation | undefined;
+  onDetail: (c: Citation | undefined, n: number) => void;
 }) {
   // Light markdown: ## headings, -/* bullets, **bold**, [Sn] citations with hover cards.
   const inline = (bagian: string, kunci: string) =>
@@ -319,19 +357,7 @@ function BubbleDenganSitasi({ text, citations, cariGlobal }: {
       const m = b.match(/^\[S(\d+)\]$/);
       if (m) {
         const n = Number(m[1]);
-        const c = cariGlobal(n, citations);
-        return (
-          <span key={`${kunci}-${i}`} className="cite-wrap">
-            <span className="cite" tabIndex={0}>[{n}]</span>
-            {c && (
-              <span className="cite-pop" role="tooltip">
-                <b>[{n}] {c.official_title}</b>
-                <span>{c.citation_str}</span>
-                <span>{(c.text || "").slice(0, 220)}{(c.text || "").length > 220 && "…"}</span>
-              </span>
-            )}
-          </span>
-        );
+        return <Cite key={`${kunci}-${i}`} n={n} c={cariGlobal(n, citations)} onOpen={onDetail} />;
       }
       // **bold** inside the same chunk
       const parts = b.split(/(\*\*[^*]+\*\*)/).map((p, j) =>
@@ -358,6 +384,43 @@ function BubbleDenganSitasi({ text, citations, cariGlobal }: {
         if (ln.trim() === "") return <div key={i} style={{ height: 8 }} />;
         return <div key={i} style={{ marginBottom: 4 }}>{inline(ln, `p${i}`)}</div>;
       })}
+    </span>
+  );
+}
+
+// Citation chip: hover card flips below/above based on viewport room
+// (default below; above only when there is no room underneath).
+function Cite({ n, c, onOpen }: {
+  n: number;
+  c: Citation | undefined;
+  onOpen: (c: Citation | undefined, n: number) => void;
+}) {
+  const [bawah, setBawah] = useState(true);
+  const ref = useRef<HTMLSpanElement>(null);
+  const arah = () => {
+    const r = ref.current?.getBoundingClientRect();
+    if (r) {
+      const ruangBawah = window.innerHeight - r.bottom;
+      setBawah(ruangBawah >= 240 || ruangBawah >= r.top);
+    }
+  };
+  return (
+    <span className="cite-wrap" ref={ref} onMouseEnter={arah}>
+      <button type="button" className="cite" onClick={() => onOpen(c, n)} onFocus={arah}
+              aria-label={`[${n}]${c ? ` ${c.official_title} — ${c.citation_str}` : ""}`}>
+        [{n}]
+      </button>
+      <span className={`cite-pop ${bawah ? "bawah" : "atas"}`} role="tooltip">
+        {c ? (
+          <>
+            <b>[{n}] {c.official_title}</b>
+            <span>{c.citation_str}</span>
+            <span>{(c.text || "").slice(0, 220)}{(c.text || "").length > 220 && "…"}</span>
+          </>
+        ) : (
+          <span>[{n}]</span>
+        )}
+      </span>
     </span>
   );
 }

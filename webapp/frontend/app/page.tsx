@@ -72,6 +72,7 @@ export default function Halaman() {
   const [cari, setCari] = useState("");
   const [showAbout, setShowAbout] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [confirmHapus, setConfirmHapus] = useState<string | null>(null);
   // docked panel width (draggable via the handle between chat and panel)
   const [lebarKanan, setLebarKanan] = useState(420);
   const dragKanan = useRef<{ sx: number; awal: number } | null>(null);
@@ -90,15 +91,15 @@ export default function Halaman() {
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Esc closes drawer / about / menu
+  // Esc closes drawer / about / menu / confirm
   useEffect(() => {
-    if (!showAbout && !drawer && !openMenu) return;
+    if (!showAbout && !drawer && !openMenu && !confirmHapus) return;
     const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { setShowAbout(false); setDrawer(null); setOpenMenu(null); }
+      if (e.key === "Escape") { setShowAbout(false); setDrawer(null); setOpenMenu(null); setConfirmHapus(null); }
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [showAbout, drawer, openMenu]);
+  }, [showAbout, drawer, openMenu, confirmHapus]);
   // focus the drawer close button when it opens (keyboard users)
   useEffect(() => {
     if (drawer) closeBtnRef.current?.focus();
@@ -426,7 +427,7 @@ export default function Halaman() {
                           </div>
                           <div className="menu-del-box">
                             <button className="menu-del" onClick={() => {
-                              if (window.confirm(T("menu.hapus.tanya"))) hapusRiwayat(h.id);
+                              setOpenMenu(null); setConfirmHapus(h.id);
                             }}><I.trash />{T("menu.hapus")}</button>
                           </div>
                         </div>
@@ -488,6 +489,26 @@ export default function Halaman() {
           </div>
         </aside>
       </div>
+
+      {confirmHapus && (
+        <div className="about-backdrop" onClick={() => setConfirmHapus(null)}>
+          <div className="about-card kecil" role="alertdialog" aria-modal="true"
+               aria-label={T("hapus.yakin")}
+               onClick={(e) => e.stopPropagation()}>
+            <div className="about-title" style={{ marginBottom: 4 }}>{T("hapus.yakin")}</div>
+            <div className="confirm-row">
+              <button className="btn ghost" onClick={() => setConfirmHapus(null)}>
+                {T("hapus.tidak")}
+              </button>
+              <button className="confirm-yes" onClick={() => {
+                const id = confirmHapus; setConfirmHapus(null); hapusRiwayat(id);
+              }}>
+                {T("hapus.ya")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && <div className="toast show" role="status">{toast}</div>}
     </div>

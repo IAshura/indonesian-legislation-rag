@@ -185,7 +185,8 @@ const ID: Record<string, string> = {
   "side.grup.minggu": "7 hari terakhir", "side.grup.lama": "Lebih lama",
   "side.kosong": "Belum ada percakapan",
   "menu.ekspor": "Ekspor", "menu.md": "Markdown (.md)", "menu.txt": "Teks (.txt)",
-  "menu.pdf": "PDF (via HTML)", "menu.hapus": "Hapus", "menu.hapus.tanya": "Hapus riwayat ini?",
+  "menu.pdf": "PDF (via HTML)",   "menu.hapus": "Hapus", "menu.hapus.tanya": "Hapus riwayat ini?",
+  "hapus.yakin": "Apakah kamu yakin menghapus?", "hapus.ya": "Ya", "hapus.tidak": "Tidak",
   "model.chip.tip": "Buka pengaturan model",
   // ---- pengaturan ----
   "set.tab.model": "Model", "set.tab.cari": "Pencarian", "set.tab.gaya": "Gaya",
@@ -371,7 +372,8 @@ const EN: Record<string, string> = {
   "side.grup.minggu": "Previous 7 days", "side.grup.lama": "Older",
   "side.kosong": "No conversations yet",
   "menu.ekspor": "Export", "menu.md": "Markdown (.md)", "menu.txt": "Text (.txt)",
-  "menu.pdf": "PDF (via HTML)", "menu.hapus": "Delete", "menu.hapus.tanya": "Delete this history?",
+  "menu.pdf": "PDF (via HTML)",   "menu.hapus": "Delete", "menu.hapus.tanya": "Delete this history?",
+  "hapus.yakin": "Are you sure you want to delete?", "hapus.ya": "Yes", "hapus.tidak": "No",
   "model.chip.tip": "Open model settings",
   // ---- settings ----
   "set.tab.model": "Model", "set.tab.cari": "Search", "set.tab.gaya": "Style",
