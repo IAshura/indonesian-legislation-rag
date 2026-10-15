@@ -282,11 +282,13 @@ h1, h2, h3 { text-wrap: balance; }
 .bubble .dry { background: var(--accent-soft); color: var(--accent); border-radius: 7px; display: inline-block;
   padding: 1px 9px; font-size: 11px; font-weight: 700; margin-bottom: 7px; }
 /* citations: dark chips, gold text (matches reference) */
-.cite { display: inline-block; background: #2B251C; color: var(--accent); border: none;
-  border-radius: 6px; padding: 0 7px; margin: 0 2px; cursor: pointer;
-  font-family: var(--font-sans); font-size: 11px; font-weight: 800; line-height: 1.45;
+.cite { display: inline-flex; align-items: center; justify-content: center;
+  background: #2B251C; color: var(--accent); border: none;
+  border-radius: 6px; padding: 1px 7px; margin: 0 2px; cursor: pointer;
+  font-family: var(--font-sans); font-size: 11px; font-weight: 800; line-height: 1.5;
   transition: background .12s var(--ease), color .12s var(--ease);
   white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cite-num { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
 .cite:hover { background: var(--accent); color: var(--on-accent); }
 /* citation hover card: portaled to body, fixed, always inside viewport */
 .cite-wrap { position: relative; display: inline-block; }

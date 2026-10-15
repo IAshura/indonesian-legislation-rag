@@ -429,7 +429,7 @@ function Cite({ n, c, onOpen }: {
               onClick={() => onOpen(c, n)}
               onMouseEnter={bukaPop} onFocus={bukaPop} onBlur={() => setBuka(false)}
               aria-label={`[${n}]${c ? ` ${c.official_title} — ${c.citation_str}` : ""}`}>
-        [{n}]
+        [<span className="cite-num">{n}</span>]
       </button>
       {buka && pos && createPortal(
         <span className="cite-pop portal" role="tooltip"
