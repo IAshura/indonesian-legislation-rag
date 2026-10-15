@@ -3,14 +3,16 @@ import { useEffect, useState } from "react";
 
 // Tooltip global: 1 elemen position:fixed untuk SEMUA [data-tip].
 // Tahan kursor 1,5 dtk -> muncul; pergi/klik/scroll -> langsung hilang.
-// Posisi dihitung dari rect target + dijepit ke viewport (tak terpotong).
+// Muncul di bawah target (tengah), balik ke atas bila sempit; selalu
+// dijepit ke dalam viewport — anti terpotong tepi layar.
 export default function TipGlobal() {
   const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
     let cur: Element | null = null;
-    const W = 240;
+    const W = 260;   // lebar maksimum tooltip (CSS max-width sama)
+    const H = 64;    // tinggi estimasi untuk pilihan atas/bawah
 
     const sembunyi = (bersihTimer = true) => {
       if (bersihTimer && timer) { clearTimeout(timer); timer = null; }
@@ -19,10 +21,12 @@ export default function TipGlobal() {
     };
     const ukurTampil = (t: Element, text: string) => {
       const r = t.getBoundingClientRect();
-      // di bawah target, rata kanan target; jepit ke viewport
-      let x = Math.min(Math.max(8, r.right - W), window.innerWidth - W - 8);
+      // horizontal: tengah target, jepit ke viewport
+      const tengah = r.left + r.width / 2;
+      const x = Math.min(Math.max(8, tengah - W / 2), window.innerWidth - W - 8);
+      // vertikal: bawah dulu, atas bila tidak muat
       let y = r.bottom + 8;
-      if (y + 110 > window.innerHeight) y = Math.max(8, r.top - 118);
+      if (y + H > window.innerHeight - 8) y = Math.max(8, r.top - H - 8);
       setTip({ text, x, y });
     };
 
@@ -61,11 +65,12 @@ export default function TipGlobal() {
 
   if (!tip) return null;
   return (
-    <div style={{ position: "fixed", left: tip.x, top: tip.y, width: 240,
-                  background: "var(--panel-3)", border: "1px solid var(--border-2)",
-                  color: "var(--text)", fontSize: 11, padding: "6px 10px",
-                  borderRadius: 8, zIndex: 9999, pointerEvents: "none",
-                  boxShadow: "var(--shadow)" }}>
+    <div style={{ position: "fixed", left: tip.x, top: tip.y, width: "max-content",
+                  maxWidth: 260, background: "var(--surface-2)",
+                  border: "1px solid var(--border-strong)",
+                  color: "var(--text)", fontSize: 12, lineHeight: 1.5,
+                  padding: "8px 12px", borderRadius: 10, zIndex: 9999,
+                  pointerEvents: "none", boxShadow: "var(--shadow)" }}>
       {tip.text}
     </div>
   );
