@@ -297,9 +297,6 @@ export default function Halaman() {
   const grup: Record<string, HistoryMeta[]> = { hari_ini: [], kemarin: [], minggu: [], lama: [] };
   riwayatCari.forEach((h) => { grup[grupTanggal(h)].push(h); });
 
-  const gantiMode = () =>
-    setSetting({ ...setting, mode: setting.mode === "agent" ? "fixed" : "agent" });
-
   return (
     <div className="app">
       <TipGlobal />
@@ -310,16 +307,18 @@ export default function Halaman() {
                 onClick={() => setSidebarTutup((v) => !v)}>
           <I.menu />
         </button>
-        <div className="brand">
-          <span className="logo-mark"><I.scales /></span>
-          Indonesian Law RAG
-        </div>
+        <div className="brand">ChatBOT Law ID</div>
         <div className="header-spacer" />
         <div className="header-status">
           <button className={`icon-btn sq ${drawer === "graf" ? "on" : ""}`}
                   data-tip={T("page.tab.graf.tip")} aria-label={T("page.tab.graf")}
                   onClick={() => setDrawer((d) => (d === "graf" ? null : "graf"))}>
             <I.graph />
+          </button>
+          <button className={`icon-btn sq ${drawer === "setting" ? "on" : ""}`}
+                  data-tip={T("page.tab.setting.tip")} aria-label={T("page.tab.setting")}
+                  onClick={() => setDrawer((d) => (d === "setting" ? null : "setting"))}>
+            <I.gear />
           </button>
           <button className="icon-btn sq" data-tip={T("page.tema.tip")} aria-label={T("page.tema.tip")}
                   onClick={() => setTheme((v) => (v === "dark" ? "light" : "dark"))}>
@@ -336,11 +335,6 @@ export default function Halaman() {
           <button className="icon-btn sq" data-tip={T("page.tanya.tip")} aria-label={T("page.tanya.tip")}
                   onClick={() => setShowAbout(true)}>
             <I.help />
-          </button>
-          <button className={`icon-btn sq ${drawer === "setting" ? "on" : ""}`}
-                  data-tip={T("page.tab.setting.tip")} aria-label={T("page.tab.setting")}
-                  onClick={() => setDrawer((d) => (d === "setting" ? null : "setting"))}>
-            <I.gear />
           </button>
         </div>
       </header>
@@ -438,11 +432,6 @@ export default function Halaman() {
               </div>
             ))}
           </div>
-          <button className="model-chip" data-tip={T("model.chip.tip")}
-                  onClick={() => setDrawer("setting")}>
-            <span className="dot-live" />
-            <b>{setting.llm.model || "—"} · {setting.llm.provider}</b>
-          </button>
         </aside>
 
         {/* ================= center chat ================= */}
@@ -451,8 +440,6 @@ export default function Halaman() {
             turns={turns} busy={busy} error={error} dryRun={setting.dryRun}
             semuaSitasi={turns.flatMap((t) => t.citations || [])}
             bahasa={L} totalToken={totalToken}
-            mode={setting.mode}
-            onToggleMode={gantiMode}
             onStop={stop}
             onKirim={(q) => kirim(q)}
           />

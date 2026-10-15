@@ -6,7 +6,7 @@ import { t, type Lang } from "../lib/i18n";
 import { I } from "./icons";
 
 export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bahasa,
-                                    totalToken, mode, onToggleMode, onStop, onKirim }: {
+                                    totalToken, onStop, onKirim }: {
   turns: ChatTurn[];
   busy: boolean;
   error: string;
@@ -14,8 +14,6 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
   semuaSitasi?: Citation[];
   bahasa: Lang;
   totalToken: { prompt_tokens: number; completion_tokens: number; total_tokens: number; cached_tokens: number };
-  mode: "fixed" | "agent";
-  onToggleMode: () => void;
   onStop: () => void;
   onKirim: (q: string) => void;
 }) {
@@ -257,10 +255,6 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); kirim(); } }}
             />
             <div className="composer-foot">
-              <button type="button" className="mode-chip" onClick={onToggleMode}
-                      title={mode === "agent" ? T("set.mode.agent.tip") : T("set.mode.fixed.tip")}>
-                {T("set.mode")}: <b>{mode === "agent" ? T("set.mode.agent") : T("set.mode.fixed")}</b>
-              </button>
               <span className="composer-hint">{T("chat.kirim.hint")}</span>
               {busy ? (
                 <button className="send-btn stop" data-tip={T("chat.stop.tip")} aria-label={T("chat.stop")}

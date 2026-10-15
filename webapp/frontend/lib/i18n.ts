@@ -177,7 +177,7 @@ const ID: Record<string, string> = {
   "chat.stop.status": "Dihentikan",
   // ---- composer ----
   "chat.kirim.hint": "Enter kirim · Shift+Enter baris baru",
-  "chat.disclaimer": "Informasi bersifat umum, bukan nasihat hukum. Verifikasi pada sumber resmi (JDIH).",
+  "chat.disclaimer": "Informasi bersifat umum, bukan nasihat hukum. Tetap verifikasi pada sumber resmi (JDIH).",
   // ---- sumber ----
   "sumber.salin": "Salin", "sumber.relevansi": "Relevansi",
   // ---- sidebar ----
@@ -363,7 +363,7 @@ const EN: Record<string, string> = {
   "chat.stop.status": "Stopped",
   // ---- composer ----
   "chat.kirim.hint": "Enter to send · Shift+Enter for new line",
-  "chat.disclaimer": "General information only, not legal advice. Verify against official sources (JDIH).",
+  "chat.disclaimer": "General information only, not legal advice. Always verify against official sources (JDIH).",
   // ---- sources ----
   "sumber.salin": "Copy", "sumber.relevansi": "Relevance",
   // ---- sidebar ----

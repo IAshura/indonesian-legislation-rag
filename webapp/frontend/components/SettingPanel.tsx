@@ -111,7 +111,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
           <div className="set-sec">
             <div className="set-sec-t">{T("set.llm")}</div>
             <div className="field">
-              <label>{T("set.llm")}</label>
               <CSelect
                 value={setting.llm.provider}
                 options={Object.keys(PROVIDER_PRESET).map((p) => ({ value: p, label: p }))}
@@ -150,7 +149,7 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
                      onChange={(e) => set({ llm: { ...setting.llm, model: e.target.value } })} />
             </div>
             <div className="field">
-              <label>{T("set.temp")} <span className="temp-row" style={{ display: "inline" }}><span className="val">{temp.toFixed(1)}</span></span></label>
+              <label>{T("set.temp")} <span className="val">{temp.toFixed(1)}</span></label>
               <div className="temp-row">
                 <input type="range" className="temp" min={0} max={1} step={0.1} value={temp}
                        style={{ "--fill": `${Math.round(temp * 100)}%` } as CSSProperties}
@@ -159,7 +158,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
                 <span className="val">{temp.toFixed(1)}</span>
               </div>
               <div className="temp-ends"><span>{T("set.temp.kaku")}</span><span>{T("set.temp.kreatif")}</span></div>
-              <div className="help">{T("set.temp.note")}</div>
             </div>
             <div className="field">
               <label>{T("set.maxtok")}</label>
