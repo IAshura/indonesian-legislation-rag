@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { api } from "../lib/store";
-import { DEFAULT_SETTINGS, Settings, ModelInfo } from "../lib/types";
+import { Settings, ModelInfo } from "../lib/types";
 import { t, type Lang } from "../lib/i18n";
 import { I } from "./icons";
 
@@ -14,7 +14,7 @@ const PROVIDER_PRESET: Record<string, { base_url: string; model: string }> = {
   custom:    { base_url: "", model: "" },
 };
 
-type Tab = "model" | "search" | "style";
+type Tab = "model" | "cari" | "gaya";
 
 export default function SettingPanel({ setting, onChange, onUsage }: {
   setting: Settings;
@@ -92,12 +92,10 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
   const [showKey, setShowKey] = useState(false);
   const temp = setting.llm.temperature ?? 0.2;
 
-  const reset = () => set({ ...DEFAULT_SETTINGS, bahasa: setting.bahasa });
-
   return (
     <div>
       <div className="set-tabs" role="tablist">
-        {(["model", "search", "style"] as const).map((tb) => (
+        {(["model", "cari", "gaya"] as const).map((tb) => (
           <button key={tb} role="tab" aria-selected={tab === tb}
                   className={tab === tb ? "on" : ""}
                   onClick={() => setTab(tb)}>
@@ -188,7 +186,7 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
         </div>
       )}
 
-      {tab === "search" && (
+      {tab === "cari" && (
         <div>
           <div className="set-sec">
             <div className="set-sec-t">{T("set.mode")}</div>
@@ -368,7 +366,7 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
         </div>
       )}
 
-      {tab === "style" && (
+      {tab === "gaya" && (
         <div>
           <div className="set-sec">
             <div className="set-sec-t">{T("set.gaya")}</div>
@@ -408,12 +406,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
         </div>
       )}
 
-      <div className="ov-foot">
-        <button type="button" className="btn ghost small" data-tip={T("set.reset.tip")}
-                onClick={reset}>
-          {T("set.reset")}
-        </button>
-      </div>
     </div>
   );
 }

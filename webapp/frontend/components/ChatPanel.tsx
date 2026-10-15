@@ -75,11 +75,14 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
 
   return (
     <>
+      <div className="token-pill">
+        <span>input/output : {totalToken.prompt_tokens.toLocaleString(LOC)}/{totalToken.completion_tokens.toLocaleString(LOC)}</span>
+        <span>total : {totalToken.total_tokens.toLocaleString(LOC)}</span>
+      </div>
       <div className="chat-scroll" ref={scrollRef}>
         <div className="chat-inner">
           {turns.length === 0 && (
             <div className="hero">
-              <div className="hero-mark"><I.scales /></div>
               <h2>{T("chat.hero.welcome")}</h2>
               <p className="sub">{T("chat.hero.sub")}</p>
               <div className="suggest-grid">
