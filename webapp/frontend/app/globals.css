@@ -150,7 +150,8 @@ h1, h2, h3 { text-wrap: balance; }
 .btn { background: var(--accent); border: none; color: var(--on-accent); padding: 8px 14px;
   border-radius: 10px; cursor: pointer; font-size: 13.5px; font-weight: 600;
   transition: background .15s var(--ease); display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
-.btn:hover:not(:disabled) { background: var(--accent-hover); }
+.btn:hover:not(:disabled) { filter: brightness(1.08); }
+.btn.secondary:hover:not(:disabled) { background: var(--surface-hover); filter: none; }
 .btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-strong); }
 .btn.ghost { background: transparent; border: 1px solid var(--border-strong); color: var(--text-muted); }
 .btn.ghost:hover { color: var(--text); border-color: var(--accent); }
@@ -341,7 +342,7 @@ button.cite { font: inherit; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 .status-line { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); padding: 4px 0; }
 .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border-strong);
-  border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -2px; }
+  border-top-color: var(--accent); border-radius: 50%; animation: spin 1.6s linear infinite; vertical-align: -2px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .warnline { color: var(--danger); font-size: 13px; background: color-mix(in srgb, var(--danger) 8%, transparent);
   border: 1px solid var(--danger); border-radius: 12px; padding: 9px 13px; }
@@ -370,7 +371,8 @@ button.cite { font: inherit; }
 .send-btn:hover:not(:disabled) { background: var(--accent-hover); }
 .send-btn:active:not(:disabled) { transform: scale(.94); }
 .send-btn:disabled { background: var(--surface-hover); color: var(--text-faint); cursor: default; }
-.send-btn.stop { background: var(--danger); color: #fff; }
+.send-btn.stop { background: var(--bg); border: 1px solid var(--danger); color: var(--danger); }
+.send-btn.stop:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 12%, transparent); }
 .send-btn svg { width: 17px; height: 17px; }
 .token-line { text-align: right; font-size: 11px; color: var(--text-faint);
   font-variant-numeric: tabular-nums; margin-top: 6px; }
