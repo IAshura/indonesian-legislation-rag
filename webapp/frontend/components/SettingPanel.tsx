@@ -79,11 +79,13 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
     try {
       const r = await api.testKoneksi(setting.llm);
       const ms = typeof r.ms === "number" ? r.ms : Math.round(performance.now() - t0);
-      onUsage?.((r.usage as { tokens?: {
-        prompt_tokens?: number; completion_tokens?: number;
-        total_tokens?: number; cached_tokens?: number } })?.tokens || {});
+      // Test usage is shown here only — never added to the session counter.
+      const tk = (r.usage as { tokens?: {
+        prompt_tokens?: number; completion_tokens?: number } })?.tokens;
+      const pt = tk?.prompt_tokens || 0;
+      const ct = tk?.completion_tokens || 0;
       setTestState("ok");
-      setTestMsg(`${T("set.test.ok")} · ${ms} ms`);
+      setTestMsg(`${T("set.test.ok")} · ${ms} ms · ${pt}/${ct} token`);
       if (setting.dryRun) set({ dryRun: false });   // koneksi OK -> user mau live
     } catch (e) { setTestState("fail"); setTestMsg((e as Error).message); }
   };
