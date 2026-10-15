@@ -260,11 +260,11 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
               ))}
             </div>
             {setting.retrieval === "bm25" ? (
-              <div className="help">{T("set.idx.bm25off")}</div>
+              <div className="hint">{T("set.idx.bm25off")}</div>
             ) : setting.denseMethod === "exact" ? (
-              <div className="help">{T("set.idx.exact.note")}</div>
+              <div className="hint">{T("set.idx.exact.note")}</div>
             ) : (
-              <div className="help">{T("set.idx.milvus.note")}</div>
+              <div className="hint">{T("set.idx.milvus.note")}</div>
             )}
             {setting.retrieval !== "bm25" && setting.denseMethod !== "exact" && (
               <div style={{ marginTop: 8 }}>
@@ -340,25 +340,23 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
           </div>
 
           <div className="set-sec">
-            <div className="set-sec-t">{T("set.topk")}</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                <input type="number" min={1} max={50} value={setting.topK}
-                       onChange={(e) => {
-                         const v = Math.max(1, Math.min(50, Number(e.target.value) || 1));
-                         set({ topK: v, injectK: Math.min(v, setting.injectK) });
-                       }} />
-              </div>
-              <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                <label>{T("set.inject")}</label>
-                <input type="number" min={1} max={setting.topK} value={setting.injectK}
-                       onChange={(e) => {
-                         const v = Math.max(1, Math.min(setting.topK, Number(e.target.value) || 1));
-                         set({ injectK: v });
-                       }} />
-              </div>
+            <div className="field">
+              <label>{T("set.topk")}</label>
+              <input type="number" min={1} max={50} value={setting.topK}
+                     onChange={(e) => {
+                       const v = Math.max(1, Math.min(50, Number(e.target.value) || 1));
+                       set({ topK: v, injectK: Math.min(v, setting.injectK) });
+                     }} />
             </div>
-            <div className="help">
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>{T("set.inject")}</label>
+              <input type="number" min={1} max={setting.topK} value={setting.injectK}
+                     onChange={(e) => {
+                       const v = Math.max(1, Math.min(setting.topK, Number(e.target.value) || 1));
+                       set({ injectK: v });
+                     }} />
+            </div>
+            <div className="hint">
               {T("set.topk.note.a")} {setting.topK} {T("set.topk.note.b")} {Math.min(setting.injectK, setting.topK)} {T("set.topk.note.c")}{setting.rerank ? ` ${T("set.topk.note.rerank")}` : ""}.
             </div>
           </div>
