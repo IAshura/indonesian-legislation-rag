@@ -584,10 +584,11 @@ input[type="range"].temp::-moz-range-thumb { width: 16px; height: 16px; border-r
   mask-image: linear-gradient(transparent, black 24px, black calc(100% - 24px), transparent); }
 .src-body > :first-child { animation: src-isi 120ms var(--ease); }
 @keyframes src-isi { from { opacity: 0; } }
-.src-teks { font-family: var(--font-serif); font-size: 17px; line-height: 1.75;
-  color: var(--text); max-width: 62ch; margin: 0; }
+.src-teks { font-family: var(--font-serif); font-size: 15px; line-height: 1.75;
+  color: var(--text); max-width: 62ch; margin: 0; text-align: justify; }
 .src-ayat { display: flex; flex-direction: column; gap: 14px; max-width: 62ch;
-  font-family: var(--font-serif); font-size: 17px; line-height: 1.75; color: var(--text); }
+  font-family: var(--font-serif); font-size: 15px; line-height: 1.75; color: var(--text);
+  text-align: justify; }
 .src-ayat-baris { display: grid; grid-template-columns: 2.5rem 1fr; gap: 0; align-items: start; }
 .src-ayat-no { font-size: 14px; color: var(--text-faint); font-variant-numeric: tabular-nums; }
 .src-potong { font-size: 13px; color: var(--text-faint); margin-top: 12px; }
