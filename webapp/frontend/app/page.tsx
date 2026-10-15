@@ -405,27 +405,30 @@ export default function Halaman() {
                       </button>
                     </div>
                     {openMenu === h.id && (
-                      <div className="menu-pop">
-                        <div style={{ fontSize: 11, color: "var(--text-faint)", padding: "4px 10px",
-                                      fontWeight: 700, textTransform: "uppercase", letterSpacing: ".6px" }}>
-                          {T("menu.ekspor")}
+                      <>
+                        <div className="menu-backdrop"
+                             onClick={(e) => { e.stopPropagation(); setOpenMenu(null); }} />
+                        <div className="menu-pop">
+                          <div className="menu-sec">
+                            <div className="menu-label">{T("menu.ekspor")}</div>
+                            <a style={{ textDecoration: "none", color: "inherit" }}
+                               href={api.exportUrl(h.id, "md")} target="_blank" rel="noreferrer">
+                              <button><I.file />{T("menu.md")}</button>
+                            </a>
+                            <a style={{ textDecoration: "none", color: "inherit" }}
+                               href={api.exportUrl(h.id, "txt")} target="_blank" rel="noreferrer">
+                              <button><I.file />{T("menu.txt")}</button>
+                            </a>
+                            <a style={{ textDecoration: "none", color: "inherit" }}
+                               href={api.exportUrl(h.id, "html")} target="_blank" rel="noreferrer">
+                              <button><I.file />{T("menu.pdf")}</button>
+                            </a>
+                          </div>
+                          <button className="menu-del" onClick={() => {
+                            if (window.confirm(T("menu.hapus.tanya"))) hapusRiwayat(h.id);
+                          }}><I.trash />{T("menu.hapus")}</button>
                         </div>
-                        <a style={{ textDecoration: "none", color: "inherit" }}
-                           href={api.exportUrl(h.id, "md")} target="_blank" rel="noreferrer">
-                          <button><I.file />{T("menu.md")}</button>
-                        </a>
-                        <a style={{ textDecoration: "none", color: "inherit" }}
-                           href={api.exportUrl(h.id, "txt")} target="_blank" rel="noreferrer">
-                          <button><I.file />{T("menu.txt")}</button>
-                        </a>
-                        <a style={{ textDecoration: "none", color: "inherit" }}
-                           href={api.exportUrl(h.id, "html")} target="_blank" rel="noreferrer">
-                          <button><I.file />{T("menu.pdf")}</button>
-                        </a>
-                        <button className="danger" onClick={() => {
-                          if (window.confirm(T("menu.hapus.tanya"))) hapusRiwayat(h.id);
-                        }}><I.trash />{T("menu.hapus")}</button>
-                      </div>
+                      </>
                     )}
                   </div>
                 ))}

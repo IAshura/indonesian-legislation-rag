@@ -190,13 +190,25 @@ h1, h2, h3 { text-wrap: balance; }
 .menu-btn { opacity: 0; flex: none; width: 28px; height: 28px; border-radius: 8px; border: none;
   background: transparent; color: var(--text-muted); cursor: pointer; font-size: 15px; line-height: 1; }
 .menu-btn:hover { background: var(--surface-2); color: var(--text); }
-.menu-pop { position: absolute; right: 6px; top: 34px; z-index: 40; min-width: 160px;
+.menu-backdrop { position: fixed; inset: 0; z-index: 39; background: transparent; }
+.menu-pop { position: absolute; right: 6px; top: 34px; z-index: 40; min-width: 190px;
   background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 12px;
-  box-shadow: var(--shadow); padding: 4px; }
+  box-shadow: var(--shadow); padding: 6px; }
+.menu-sec { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 4px; margin-bottom: 6px; }
+.menu-label { font-size: 11px; color: var(--text-faint); padding: 4px 10px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
 .menu-pop button { display: flex; width: 100%; gap: 8px; align-items: center; background: none; border: none;
   color: var(--text); font-size: 13px; padding: 8px 10px; border-radius: 8px; cursor: pointer; text-align: left; }
 .menu-pop button:hover { background: var(--surface-hover); }
 .menu-pop button.danger { color: var(--danger); }
+/* delete: own container, semi-red */
+.menu-del { display: flex; width: 100%; gap: 8px; align-items: center; cursor: pointer;
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  color: var(--danger); font-size: 13px; font-weight: 600; padding: 9px 10px;
+  border-radius: 10px; text-align: left; }
+.menu-del:hover { background: color-mix(in srgb, var(--danger) 22%, transparent); }
 .side-actions { display: none; }
 .side-empty { color: var(--text-faint); font-size: 13px; padding: 12px; text-align: center; }
 .model-chip { margin: 8px 14px 14px; display: flex; align-items: center; gap: 8px; width: calc(100% - 28px);
