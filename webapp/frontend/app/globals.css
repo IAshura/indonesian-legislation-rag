@@ -364,11 +364,11 @@ h1, h2, h3 { text-wrap: balance; }
 .ov-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .ov-title { font-family: var(--font-serif); font-size: 20px; font-weight: 500; flex: 1; }
 .ov-body { flex: 1; overflow: auto; padding: 16px; min-height: 0; }
-/* segmented tabs: no box — three standalone buttons on the panel background */
-.set-tabs { display: flex; gap: 4px; margin: -8px -16px 16px; padding: 10px 16px 12px;
+/* segmented tabs: no box — three segments, active fills its whole cell */
+.set-tabs { display: flex; gap: 0; margin: -8px -16px 16px; padding: 0 16px;
   background: transparent; border-bottom: 1px solid var(--border); }
-.set-tabs button { flex: 1; padding: 8px 4px; background: none; border: none; cursor: pointer;
-  border-radius: 9px; color: var(--text-muted); font-weight: 600; font-size: 13px;
+.set-tabs button { flex: 1; padding: 13px 4px 12px; background: none; border: none; cursor: pointer;
+  border-radius: 0; color: var(--text-muted); font-weight: 600; font-size: 13px;
   transition: background .15s var(--ease), color .15s var(--ease); }
 .set-tabs button.on { background: var(--surface-hover); color: var(--text); }
 /* flat sections: whitespace + hairline, no nested cards */
