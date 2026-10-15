@@ -364,9 +364,9 @@ h1, h2, h3 { text-wrap: balance; }
 .ov-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .ov-title { font-family: var(--font-serif); font-size: 20px; font-weight: 500; flex: 1; }
 .ov-body { flex: 1; overflow: auto; padding: 16px; min-height: 0; }
-/* segmented tabs */
-.set-tabs { display: flex; background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 3px; gap: 2px; margin-bottom: 16px; }
+/* segmented tabs: full-bleed strip, edge to edge of the panel */
+.set-tabs { display: flex; background: var(--surface-2); border-bottom: 1px solid var(--border);
+  padding: 10px 16px; gap: 4px; margin: -16px -16px 16px; }
 .set-tabs button { flex: 1; padding: 8px 4px; background: none; border: none; cursor: pointer;
   border-radius: 9px; color: var(--text-muted); font-weight: 600; font-size: 13px;
   transition: background .15s var(--ease), color .15s var(--ease); }
