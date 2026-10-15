@@ -424,9 +424,11 @@ export default function Halaman() {
                               <button><I.file />{T("menu.pdf")}</button>
                             </a>
                           </div>
-                          <button className="menu-del" onClick={() => {
-                            if (window.confirm(T("menu.hapus.tanya"))) hapusRiwayat(h.id);
-                          }}><I.trash />{T("menu.hapus")}</button>
+                          <div className="menu-del-box">
+                            <button className="menu-del" onClick={() => {
+                              if (window.confirm(T("menu.hapus.tanya"))) hapusRiwayat(h.id);
+                            }}><I.trash />{T("menu.hapus")}</button>
+                          </div>
                         </div>
                       </>
                     )}

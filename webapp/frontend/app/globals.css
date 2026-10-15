@@ -195,19 +195,21 @@ h1, h2, h3 { text-wrap: balance; }
   background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 12px;
   box-shadow: var(--shadow); padding: 6px; }
 .menu-sec { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-  padding: 4px; margin-bottom: 6px; }
+  padding: 3px; margin: 2px 2px 8px; }
 .menu-label { font-size: 11px; color: var(--text-faint); padding: 4px 10px;
   font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
 .menu-pop button { display: flex; width: 100%; gap: 8px; align-items: center; background: none; border: none;
   color: var(--text); font-size: 13px; padding: 8px 10px; border-radius: 8px; cursor: pointer; text-align: left; }
 .menu-pop button:hover { background: var(--surface-hover); }
 .menu-pop button.danger { color: var(--danger); }
-/* delete: own container, semi-red */
+/* delete: same box treatment, dark red */
+.menu-del-box { background: color-mix(in srgb, var(--danger) 16%, black);
+  border: 1px solid color-mix(in srgb, var(--danger) 38%, transparent);
+  border-radius: 10px; padding: 3px; margin: 2px; }
 .menu-del { display: flex; width: 100%; gap: 8px; align-items: center; cursor: pointer;
-  background: color-mix(in srgb, var(--danger) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  background: transparent; border: none;
   color: var(--danger); font-size: 13px; font-weight: 600; padding: 9px 10px;
-  border-radius: 10px; text-align: left; }
+  border-radius: 8px; text-align: left; }
 .menu-del:hover { background: color-mix(in srgb, var(--danger) 22%, transparent); }
 .side-actions { display: none; }
 .side-empty { color: var(--text-faint); font-size: 13px; padding: 12px; text-align: center; }
