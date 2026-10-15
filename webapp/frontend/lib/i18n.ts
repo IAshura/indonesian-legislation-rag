@@ -97,7 +97,7 @@ const ID: Record<string, string> = {
   "set.test": "Test koneksi", "set.test.tip": "Uji koneksi LLM (1 panggilan murah)",
   "set.test.busy": "menguji…", "set.test.masuk": "masuk total sesi",
   // ---- chat ----
-  "chat.hero.judul": "Tanya pasal peraturan Indonesia 💬",
+  "chat.hero.welcome": "Selamat datang, bagaimana saya bisa membantu?",
   "chat.hero.a": "Jawaban", "chat.hero.b": "hanya dari teks peraturan",
   "chat.hero.c": "— hybrid BM25 + dense retrieval,",
   "chat.hero.d": "small-to-big",
@@ -250,7 +250,7 @@ const EN: Record<string, string> = {
   "set.dry.on": "On (demo)", "set.dry.on.tip": "No LLM call (free, for demo)",
   "set.dry.off": "Off (LLM live)", "set.dry.off.tip": "Call real LLM (costs tokens)",
   // ---- chat ----
-  "chat.hero.judul": "Ask Indonesian regulations 💬",
+  "chat.hero.welcome": "Welcome, how can I help you?",
   "chat.hero.a": "Answers", "chat.hero.b": "strictly from regulation text",
   "chat.hero.c": "— hybrid BM25 + dense retrieval,",
   "chat.hero.d": "small-to-big",

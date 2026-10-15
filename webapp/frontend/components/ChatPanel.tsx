@@ -3,9 +3,6 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { Citation, ChatTurn } from "../lib/types";
 import { t, type Lang } from "../lib/i18n";
 
-const DEMO_Q = "Di tangan siapa kedaulatan berada menurut UUD 1945?";
-const DEMO_Q_EN = "In whose hands does sovereignty rest under the 1945 Constitution?";
-
 const SARAN_ID = [
   "Berapa lama masa jabatan Presiden menurut UUD 1945?",
   "Siapa pemegang kekuasaan kehakiman?",
@@ -69,20 +66,9 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
       <div className="chat-scroll" ref={scrollRef}>
         <div className="chat-inner">
           {turns.length === 0 && (
-            <div className="hero">
-              <div className="hero-mark">⚖️</div>
-              <h2>{T("chat.hero.judul")}</h2>
-              <p>
-                {T("chat.hero.a")} <b>{T("chat.hero.b")}</b> {T("chat.hero.c")}
-                <i> {T("chat.hero.d")}</i> {T("chat.hero.e")}{" "}
-                <b>{T("chat.hero.f")}</b>, <b>{T("chat.hero.g")}</b>
-                {T("chat.hero.h")}
-              </p>
-              <div className="suggest-row">
-                <button className="demo-btn" data-tip={T("chat.demo.tip")}
-                        onClick={() => onKirim(L === "id" ? DEMO_Q : DEMO_Q_EN)}>
-                  🏛️ {L === "id" ? DEMO_Q : DEMO_Q_EN}
-                </button>
+            <div className="hero hero-welcome">
+              <h2>{T("chat.hero.welcome")}</h2>
+              <div className="suggest-col">
                 {saran.map((s) => (
                   <button key={s} className="suggest-chip" onClick={() => onKirim(s)}>
                     {s}
