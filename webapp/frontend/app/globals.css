@@ -380,6 +380,10 @@ h1, h2, h3 { text-wrap: balance; }
 .field { margin-bottom: 14px; }
 .field > label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
 .field .help { font-size: 12px; color: var(--text-faint); margin-top: 5px; line-height: 1.5; }
+/* side-by-side field pair: equal labels keep inputs aligned */
+.pair2 { display: flex; gap: 10px; }
+.pair2 .field { flex: 1; min-width: 0; margin-bottom: 0; }
+.pair2 .field > label { min-height: 37px; }
 /* explanatory notes: faint, inset with a hairline tick — never body text */
 .hint { display: flex; gap: 9px; margin-top: 9px; font-size: 12px; line-height: 1.6;
   color: var(--text-faint); font-variant-numeric: tabular-nums; }

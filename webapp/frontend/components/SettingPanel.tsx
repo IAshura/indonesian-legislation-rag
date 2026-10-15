@@ -339,21 +339,23 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
           </div>
 
           <div className="set-sec">
-            <div className="field">
-              <label>{T("set.topk")}</label>
-              <input type="number" min={1} max={50} value={setting.topK}
-                     onChange={(e) => {
-                       const v = Math.max(1, Math.min(50, Number(e.target.value) || 1));
-                       set({ topK: v, injectK: Math.min(v, setting.injectK) });
-                     }} />
-            </div>
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label>{T("set.inject")}</label>
-              <input type="number" min={1} max={setting.topK} value={setting.injectK}
-                     onChange={(e) => {
-                       const v = Math.max(1, Math.min(setting.topK, Number(e.target.value) || 1));
-                       set({ injectK: v });
-                     }} />
+            <div className="pair2">
+              <div className="field">
+                <label>{T("set.topk")}</label>
+                <input type="number" min={1} max={50} value={setting.topK}
+                       onChange={(e) => {
+                         const v = Math.max(1, Math.min(50, Number(e.target.value) || 1));
+                         set({ topK: v, injectK: Math.min(v, setting.injectK) });
+                       }} />
+              </div>
+              <div className="field">
+                <label>{T("set.inject")}</label>
+                <input type="number" min={1} max={setting.topK} value={setting.injectK}
+                       onChange={(e) => {
+                         const v = Math.max(1, Math.min(setting.topK, Number(e.target.value) || 1));
+                         set({ injectK: v });
+                       }} />
+              </div>
             </div>
             <div className="hint">
               {T("set.topk.note.a")} {setting.topK} {T("set.topk.note.b")} {Math.min(setting.injectK, setting.topK)} {T("set.topk.note.c")}{setting.rerank ? ` ${T("set.topk.note.rerank")}` : ""}.
