@@ -288,7 +288,7 @@ h1, h2, h3 { text-wrap: balance; }
   font-family: var(--font-sans); font-size: 11px; font-weight: 800; line-height: 1.5;
   transition: background .12s var(--ease), color .12s var(--ease);
   white-space: nowrap; font-variant-numeric: tabular-nums; }
-.cite-num { text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; }
+.cite-num { text-decoration: none; }
 .cite:hover { background: var(--accent); color: var(--on-accent); }
 /* citation hover card: portaled to body, fixed, always inside viewport */
 .cite-wrap { position: relative; display: inline-block; }
