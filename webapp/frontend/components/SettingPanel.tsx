@@ -126,10 +126,9 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
             <div className="field">
               <label>{T("set.apikey")}</label>
               <div style={{ position: "relative" }}>
-                <input type={showKey ? "text" : "password"} value={setting.llm.api_key}
-                       style={{ paddingRight: 44 }}
-                       onChange={(e) => set({ llm: { ...setting.llm, api_key: e.target.value } })}
-                       placeholder={T("set.apikey.ph")} />
+              <input type={showKey ? "text" : "password"} value={setting.llm.api_key}
+                     style={{ paddingRight: 44 }}
+                     onChange={(e) => set({ llm: { ...setting.llm, api_key: e.target.value } })} />
                 <button type="button" className="eye-btn"
                         data-tip={showKey ? T("set.apikey.sembunyi") : T("set.apikey.lihat")}
                         aria-label={showKey ? T("set.apikey.sembunyi") : T("set.apikey.lihat")}
@@ -137,9 +136,9 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
                   {showKey ? <I.eyeOff /> : <I.eye />}
                 </button>
               </div>
-              {setting.llm.api_key
-                ? <div className="help"><span className="saved-tag">✓ {T("set.apikey.tersimpan")}</span></div>
-                : <div className="help">{T("set.apikey.ph")}</div>}
+              {setting.llm.api_key && (
+                <div className="help"><span className="saved-tag">✓ {T("set.apikey.tersimpan")}</span></div>
+              )}
             </div>
             <div className="field">
               <label>{T("set.model")}</label>
@@ -380,7 +379,7 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
                 </label>
               ))}
             </div>
-            <div className="help">
+            <div className="hint">
               {setting.gaya === "ringkas" ? T("set.gaya.ringkas.note") :
                setting.gaya === "rinci" ? T("set.gaya.rinci.note") :
                T("set.gaya.standar.note")}
