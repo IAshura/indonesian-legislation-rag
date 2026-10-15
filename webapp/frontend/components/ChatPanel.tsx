@@ -105,7 +105,6 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
                 </div>
               ) : (
                 <div className="msg bot">
-                  <div className="avatar-mark"><I.scales /></div>
                   <div className="body">
                     {t.replayOfNodeId && (
                       <div style={{ fontSize: 11, color: "var(--accent)", marginBottom: 5 }}>
@@ -284,13 +283,14 @@ function PenalaranView({ reasoning, mentah, lang }: {
   reasoning: string; mentah?: string | null; lang: Lang;
 }) {
   const T = (k: string) => t(lang, k);
-  const [lihatMentah, setLihatMentah] = useState(true);
+  // Default: NEAT first (readable). Toggle to Raw when needed.
+  const [lihatMentah, setLihatMentah] = useState(false);
   return (
     <details className="proc">
       <summary>{T("chat.nalar.judul")}</summary>
       <div className="proc-body">
         {mentah != null && (
-          <div style={{ marginBottom: 6 }}>
+          <div style={{ margin: "10px 0 8px" }}>
             <button type="button" className="mini-btn"
                     data-tip={lihatMentah ? T("penalaran.rapi.tip") : T("penalaran.mentah.tip")}
                     onClick={() => setLihatMentah((v) => !v)}>
