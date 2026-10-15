@@ -285,7 +285,7 @@ h1, h2, h3 { text-wrap: balance; }
 .cite { display: inline-flex; align-items: center; justify-content: center;
   background: #2B251C; color: var(--accent); border: none;
   border-radius: 6px; padding: 1px 7px; margin: 0 2px; cursor: pointer;
-  font-family: var(--font-sans); font-size: 11px; font-weight: 800; line-height: 1.5;
+  font-family: Calibri, "Segoe UI", system-ui, sans-serif; font-size: 11px; font-weight: 800; line-height: 1.5;
   transition: background .12s var(--ease), color .12s var(--ease);
   white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cite-num { text-decoration: none; }
