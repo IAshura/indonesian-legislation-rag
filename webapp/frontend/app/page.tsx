@@ -338,8 +338,6 @@ export default function Halaman() {
             turns={turns} busy={busy} error={error} dryRun={setting.dryRun}
             semuaSitasi={turns.flatMap((t) => t.citations || [])}
             bahasa={L} totalToken={totalToken}
-            onResetToken={() => setTotalToken(
-              { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, cached_tokens: 0 })}
             onKirim={(q) => kirim(q)}
             onCiteClick={(c) => alert(c.official_title
               ? `[S${c.n}] ${c.official_title} — ${c.citation_str}\n\n` +

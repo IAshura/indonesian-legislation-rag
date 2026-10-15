@@ -159,12 +159,12 @@ button { font: inherit; }
 /* session token pill, top-left of the chat panel */
 .token-pill {
   position: absolute; top: 10px; left: 14px; z-index: 5;
-  display: flex; align-items: center; gap: 7px;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
-  padding: 3px 6px 3px 11px; font-size: 11px; color: var(--muted);
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  padding: 6px 11px; font-size: 11px; color: var(--muted); line-height: 1.5;
   box-shadow: var(--shadow); max-width: calc(100% - 28px);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.token-pill .mini-btn { border: none; padding: 2px 7px; }
 .chat-scroll { flex: 1; overflow: auto; min-height: 0; }
 .chat-inner { max-width: 780px; margin: 0 auto; padding: 22px 20px 12px; display: flex; flex-direction: column; gap: 16px; }
 
