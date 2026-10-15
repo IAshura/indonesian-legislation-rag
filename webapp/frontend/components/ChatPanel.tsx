@@ -200,7 +200,6 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
             <button className="send-btn" data-tip={T("chat.kirim.tip")} onClick={kirim}
                     disabled={busy || !teks.trim()} aria-label={T("chat.kirim")}>↑</button>
           </div>
-          <div className="composer-hint">{T("chat.hint")}</div>
         </div>
       </div>
     </>

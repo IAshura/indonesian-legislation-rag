@@ -56,6 +56,13 @@ export default function Halaman() {
   const [sidebarTutup, setSidebarTutup] = useState(false);
   const [drawer, setDrawer] = useState<null | "setting" | "graf">(null);
   const [cari, setCari] = useState("");
+  const [showAbout, setShowAbout] = useState(false);
+  useEffect(() => {
+    if (!showAbout) return;
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAbout(false); };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [showAbout]);
   // docked panel width (draggable via the handle between chat and panel)
   const [lebarKanan, setLebarKanan] = useState(400);
   const dragKanan = useRef<{ sx: number; awal: number } | null>(null);
@@ -254,9 +261,15 @@ export default function Halaman() {
         )}
         <div className="header-spacer" />
         <div className="header-status">
-          <button className="icon-btn lang" data-tip={T("page.bahasa.tip")}
-                  onClick={gantiBahasa}>
-            <span className="lbl">{L.toUpperCase()}</span>
+          <button className={`icon-btn ${drawer === "graf" ? "on" : ""}`}
+                  data-tip={T("page.tab.graf.tip")}
+                  onClick={() => setDrawer((d) => (d === "graf" ? null : "graf"))}>
+            <span className="lbl">{T("page.tab.graf")}</span>
+          </button>
+          <button className={`icon-btn ${drawer === "setting" ? "on" : ""}`}
+                  data-tip={T("page.tab.setting.tip")}
+                  onClick={() => setDrawer((d) => (d === "setting" ? null : "setting"))}>
+            <span className="lbl">{T("page.tab.setting")}</span>
           </button>
           <button className="icon-btn sq" data-tip={T("page.tema.tip")}
                   onClick={() => setTheme((v) => (v === "dark" ? "light" : "dark"))}
@@ -277,18 +290,40 @@ export default function Halaman() {
               </svg>
             )}
           </button>
-          <button className={`icon-btn ${drawer === "graf" ? "on" : ""}`}
-                  data-tip={T("page.tab.graf.tip")}
-                  onClick={() => setDrawer((d) => (d === "graf" ? null : "graf"))}>
-            <span className="lbl">{T("page.tab.graf")}</span>
+          <button className="icon-btn lang" data-tip={T("page.bahasa.tip")}
+                  onClick={gantiBahasa}>
+            <span className="lbl">{L.toUpperCase()}</span>
           </button>
-          <button className={`icon-btn ${drawer === "setting" ? "on" : ""}`}
-                  data-tip={T("page.tab.setting.tip")}
-                  onClick={() => setDrawer((d) => (d === "setting" ? null : "setting"))}>
-            <span className="lbl">{T("page.tab.setting")}</span>
+          <button className="icon-btn sq" data-tip={T("page.tanya.tip")}
+                  onClick={() => setShowAbout(true)}
+                  aria-label={T("page.tanya.tip")}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <path d="M12 17h.01" />
+            </svg>
           </button>
         </div>
       </header>
+      {showAbout && (
+        <div className="about-backdrop" onClick={() => setShowAbout(false)}>
+          <div className="about-card" onClick={(e) => e.stopPropagation()}>
+            <div className="about-head">
+              <div className="about-title">{T("about.judul")}</div>
+              <button className="icon-btn sq" onClick={() => setShowAbout(false)}>✕</button>
+            </div>
+            <div className="about-body">
+              <p>{T("about.p1")}</p>
+              <p>{T("about.p2")}</p>
+              <p className="about-warn">{T("about.p3")}</p>
+            </div>
+            <button className="btn block" onClick={() => setShowAbout(false)}>
+              {T("about.tutup")}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="app-body">
         {/* ================= left: history ================= */}

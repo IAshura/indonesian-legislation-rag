@@ -408,6 +408,18 @@ button { font: inherit; }
 .rank-row .skor { color: var(--muted); font-size: 11px; margin-left: auto; white-space: nowrap; }
 .rerank-btn-row { margin-top: auto; padding: 10px 16px; border-top: 1px solid var(--border); }
 
+/* ---------- about modal (centered) ---------- */
+.about-backdrop { position: fixed; inset: 0; background: var(--overlay); z-index: 50;
+  display: flex; align-items: center; justify-content: center; padding: 18px; }
+.about-card { width: min(560px, 100%); max-height: 84vh; overflow: auto;
+  background: var(--panel); border: 1px solid var(--border-2); border-radius: 16px;
+  box-shadow: var(--shadow); padding: 18px 20px; }
+.about-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.about-title { font-size: 16px; font-weight: 750; flex: 1; }
+.about-body p { font-size: 13px; line-height: 1.7; color: var(--text-2); margin: 0 0 10px; }
+.about-body .about-warn { background: color-mix(in srgb, var(--warn) 10%, transparent);
+  border: 1px solid var(--warn); border-radius: 10px; padding: 9px 12px; color: var(--text-2); }
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .sidebar { position: absolute; top: 0; bottom: 0; left: 0; box-shadow: var(--shadow); }
