@@ -1,33 +1,45 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 // Tooltip global: 1 elemen position:fixed untuk SEMUA [data-tip].
 // Tahan kursor 1,5 dtk -> muncul; pergi/klik/scroll -> langsung hilang.
-// Muncul di bawah target (tengah), balik ke atas bila sempit; selalu
-// dijepit ke dalam viewport — anti terpotong tepi layar.
+// Posisi diukur dari ukuran tooltip ASLI (bukan tebakan): tengah-bawah
+// target, balik ke atas bila sempit, selalu dijepit ke dalam viewport.
 export default function TipGlobal() {
-  const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [tip, setTip] = useState<{ text: string } | null>(null);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const target = useRef<Element | null>(null);
+
+  // ukur setelah render (sebelum paint: tanpa kedip), lalu tempatkan
+  useLayoutEffect(() => {
+    if (!tip || !ref.current || !target.current) return;
+    const r = target.current.getBoundingClientRect();
+    const w = ref.current.offsetWidth;
+    const h = ref.current.offsetHeight;
+    const x = Math.min(
+      Math.max(8, r.left + r.width / 2 - w / 2),
+      Math.max(8, window.innerWidth - w - 8)
+    );
+    let y = r.bottom + 8;
+    if (y + h > window.innerHeight - 8) y = Math.max(8, r.top - h - 8);
+    setPos({ x, y });
+  }, [tip]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
     let cur: Element | null = null;
-    const W = 260;   // lebar maksimum tooltip (CSS max-width sama)
-    const H = 64;    // tinggi estimasi untuk pilihan atas/bawah
 
     const sembunyi = (bersihTimer = true) => {
       if (bersihTimer && timer) { clearTimeout(timer); timer = null; }
       cur = null;
+      target.current = null;
       setTip(null);
+      setPos(null);
     };
     const ukurTampil = (t: Element, text: string) => {
-      const r = t.getBoundingClientRect();
-      // horizontal: tengah target, jepit ke viewport
-      const tengah = r.left + r.width / 2;
-      const x = Math.min(Math.max(8, tengah - W / 2), window.innerWidth - W - 8);
-      // vertikal: bawah dulu, atas bila tidak muat
-      let y = r.bottom + 8;
-      if (y + H > window.innerHeight - 8) y = Math.max(8, r.top - H - 8);
-      setTip({ text, x, y });
+      target.current = t;
+      setTip({ text });
     };
 
     const masuk = (e: MouseEvent) => {
@@ -35,9 +47,9 @@ export default function TipGlobal() {
       if (t === cur) return;   // masih di elemen sama: biarkan timer jalan
       if (timer) { clearTimeout(timer); timer = null; }
       cur = t;
-      if (!t) { setTip(null); return; }
+      if (!t) { setTip(null); setPos(null); return; }
       const text = t.getAttribute("data-tip") || "";
-      if (!text) { setTip(null); return; }
+      if (!text) { setTip(null); setPos(null); return; }
       timer = setTimeout(() => ukurTampil(t, text), 1500);
     };
 
@@ -65,8 +77,10 @@ export default function TipGlobal() {
 
   if (!tip) return null;
   return (
-    <div style={{ position: "fixed", left: tip.x, top: tip.y, width: "max-content",
-                  maxWidth: 260, background: "var(--surface-2)",
+    <div ref={ref} style={{ position: "fixed",
+                  left: pos ? pos.x : -9999, top: pos ? pos.y : -9999,
+                  width: "max-content", maxWidth: 260,
+                  background: "var(--surface-2)",
                   border: "1px solid var(--border-strong)",
                   color: "var(--text)", fontSize: 12, lineHeight: 1.5,
                   padding: "8px 12px", borderRadius: 10, zIndex: 9999,
