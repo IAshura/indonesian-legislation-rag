@@ -209,7 +209,7 @@ h1, h2, h3 { text-wrap: balance; }
   color: var(--danger); font-size: 13px; font-weight: 600; padding: 9px 10px;
   border-radius: 8px; text-align: left;
   transition: background .15s var(--ease), color .15s var(--ease); }
-.menu-pop button.menu-del:hover { background: #C62828; color: #fff; }
+.menu-pop button.menu-del:hover { background: #B3261E; color: #fff; }
 .side-actions { display: none; }
 .side-empty { color: var(--text-faint); font-size: 13px; padding: 12px; text-align: center; }
 .model-chip { margin: 8px 14px 14px; display: flex; align-items: center; gap: 8px; width: calc(100% - 28px);
