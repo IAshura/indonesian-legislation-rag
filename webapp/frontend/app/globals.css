@@ -299,11 +299,13 @@ button.cite { font: inherit; }
 .cite-pop span { display: block; color: var(--text-muted); margin-top: 2px; }
 /* small confirm dialog */
 .about-card.kecil { width: min(360px, 100%); }
+.about-card.kecil .about-title { font-size: 15px; font-family: var(--font-sans); font-weight: 600; }
 .confirm-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
-.confirm-yes { border: 1px solid transparent; background: transparent; color: var(--danger);
+.confirm-yes { border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+  background: transparent; color: var(--danger);
   font-size: 13.5px; font-weight: 700; padding: 8px 18px; border-radius: 10px; cursor: pointer;
-  transition: background .15s var(--ease), color .15s var(--ease); }
-.confirm-yes:hover, .confirm-yes:active { background: #B3261E; color: #fff; }
+  transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease); }
+.confirm-yes:hover, .confirm-yes:active { background: #B3261E; border-color: #B3261E; color: #fff; }
 /* sources block */
 .sources { border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
   margin-top: 10px; overflow: hidden; }
