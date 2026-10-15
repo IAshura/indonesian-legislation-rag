@@ -549,6 +549,10 @@ input[type="range"].temp::-moz-range-thumb { width: 16px; height: 16px; border-r
 .pop-id { color: var(--text-muted); font-size: 12px; flex: none; font-variant-numeric: tabular-nums; }
 .graf-popup .head .icon-btn { background: color-mix(in srgb, var(--text) 9%, transparent);
   border-color: var(--border-strong); color: var(--text); }
+.graf-popup .head .icon-btn:hover { background: color-mix(in srgb, var(--text) 18%, transparent);
+  border-color: var(--accent); color: var(--text); }
+.graf-popup .head .mode-raw-cleaner { align-self: stretch; }
+.graf-popup .head .mode-raw-cleaner button { display: inline-flex; align-items: center; }
 .mode-raw-cleaner { display: flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
 .mode-raw-cleaner button { background: none; border: none; color: var(--text-muted); padding: 5px 14px;
   cursor: pointer; font-size: 12px; }
