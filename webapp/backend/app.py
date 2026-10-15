@@ -9,6 +9,7 @@ Endpoint:
   GET  /api/health                    -> {ok, model_aktif, bertahan}
   GET  /api/milvus/status             -> {ok, koleksi, entitas, dim, cocok_dim}
   GET  /api/models                   -> daftar embedding + tag aktif
+  POST /api/llm/ping {llm}            -> {ok, ms, model, usage} (tanpa retrieval)
   POST /api/embedding/switch {tag}    -> tulis ACTIVE + reload modul lama
   POST /api/ask                       -> jawaban + citations + trace + usage
     body: {question, mode:"fixed"|"agent", retrieval:"hybrid"|"dense"|"bm25",
@@ -371,7 +372,85 @@ def api_ask_stream(req: AskRequest):
                                       "X-Accel-Buffering": "no"})
 
 
+class PingRequest(BaseModel):
+    llm: LLMConfig | None = None
+
+
 # ------------------------------------------------------------------ models
+@app.post("/api/llm/ping")
+def api_llm_ping(req: PingRequest):
+    """Uji koneksi LLM mentah: SATU panggilan mini TANPA retrieval/RAG.
+
+    Beda dengan /api/ask (yang menjalankan pipeline retrieval + menjawab
+    pertanyaan): endpoint ini hanya memastikan base_url + api_key + model
+    diterima provider. Prompt 1 kata, max_tokens 8 — biaya ~belasan token.
+    api_key tidak pernah di-log/di-echo.
+    """
+    import time as _time
+
+    import requests as _rq
+
+    import llm_adapter as _ad
+
+    llm_d = req.llm.model_dump(exclude_none=True) if req.llm else {}
+    provider = ((llm_d.get("provider") or "custom").strip().lower()
+                or "custom")
+    try:
+        base_url, api_key, model = llm_provider.validasi(llm_d)
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not base_url:
+        raise HTTPException(
+            status_code=400,
+            detail="live LLM butuh llm.base_url (isi preset provider/custom)")
+    if not api_key and provider != "ollama":
+        raise HTTPException(status_code=400,
+                            detail="live LLM butuh llm.api_key")
+    if provider == "ollama" and not api_key:
+        api_key = "ollama"
+    if not model:
+        raise HTTPException(status_code=400,
+                            detail="live LLM butuh llm.model")
+    messages = [{"role": "user", "content": "Reply with exactly: ok"}]
+    t0 = _time.perf_counter()
+    try:
+        if _ad.rasa(provider, base_url) == "anthropic":
+            _msg, usage_raw = _ad.complete_anthropic(
+                base_url, api_key, model, messages, None, 0, 8)
+        else:
+            url = base_url.rstrip("/") + "/chat/completions"
+            resp = _rq.post(
+                url,
+                json={"model": model, "messages": messages,
+                      "temperature": 0, "max_tokens": 8},
+                headers={"Authorization": f"Bearer {api_key}",
+                         "Content-Type": "application/json"},
+                timeout=60)
+            if resp.status_code != 200:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"HTTP {resp.status_code} dari LLM: "
+                           f"{resp.text[:300]}")
+            try:
+                data = resp.json()
+                _msg = data["choices"][0]["message"]
+            except (ValueError, KeyError, IndexError):
+                raise HTTPException(
+                    status_code=502,
+                    detail="Respons LLM tak berbentuk chat completion")
+            usage_raw = data.get("usage") or {}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"LLM tak terjangkau ({base_url}): {e}")
+    ms = int((_time.perf_counter() - t0) * 1000)
+    content = ((_msg or {}).get("content") or "").strip()
+    return {"ok": True, "ms": ms, "model": model, "answer": content,
+            "usage": {"tokens": llm_provider.normalisasi_usage(usage_raw)}}
+
+
 @app.get("/api/health")
 def api_health():
     return {"ok": True,

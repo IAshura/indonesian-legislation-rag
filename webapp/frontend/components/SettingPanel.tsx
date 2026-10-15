@@ -78,12 +78,12 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
     const t0 = performance.now();
     try {
       const r = await api.testKoneksi(setting.llm);
-      const ms = Math.round(performance.now() - t0);
+      const ms = typeof r.ms === "number" ? r.ms : Math.round(performance.now() - t0);
       onUsage?.((r.usage as { tokens?: {
         prompt_tokens?: number; completion_tokens?: number;
         total_tokens?: number; cached_tokens?: number } })?.tokens || {});
       setTestState("ok");
-      setTestMsg(`${T("set.test.ok")} · ${ms} ms — “${String(r.answer).slice(0, 80)}”`);
+      setTestMsg(`${T("set.test.ok")} · ${ms} ms`);
       if (setting.dryRun) set({ dryRun: false });   // koneksi OK -> user mau live
     } catch (e) { setTestState("fail"); setTestMsg((e as Error).message); }
   };
@@ -178,7 +178,7 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
               </button>
               {testMsg && (
                 <div className={testState === "ok" ? "okbox" : "errbox"}>
-                  {testState === "ok" ? "✓ " : ""}{testMsg}
+                  {testState === "fail" ? "⚠ " : ""}{testMsg}
                 </div>)}
             </div>
           </div>

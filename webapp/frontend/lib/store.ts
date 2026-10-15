@@ -107,24 +107,22 @@ export const api = {
     `${API}/api/history/${id}/export?format=${format}`,
 
   testKoneksi: (llm: Settings["llm"]) =>
-    // Test koneksi = /api/ask fixed + bm25 + max 1 token — cukup memastikan
-    // base_url/key/model diterima provider tanpa biaya besar.
-    api.ask({
-      question: "ping",
-      mode: "fixed", retrieval: "bm25", rerank: false, top_k: 1,
-      inject_k: 1, dry_run: false,
+    // Test koneksi = POST /api/llm/ping: 1 panggilan mini TANPA retrieval
+    // (dulu memakai /api/ask sehingga ikut mencari di korpus + mahal).
+    api.ping({
       llm: {
         provider: llm.provider === "custom" ? "custom" : llm.provider,
         base_url: llm.base_url, api_key: llm.api_key, model: llm.model,
-        temperature: llm.temperature, max_tokens: llm.maxTokens,
       },
     }).then((r) => ({
-      // normalisasi: backend bisa mengembalikan answer non-string
-      // (misal error shape) — paksa jadi string agar .slice aman.
-      // usage ikut diteruskan agar pemanggil bisa akumulasi ke total sesi.
-      answer: String(
-        (r as { answer?: unknown; jawaban?: unknown }).answer ??
-        (r as { answer?: unknown; jawaban?: unknown }).jawaban ?? ""),
+      answer: String((r as { answer?: unknown }).answer ?? ""),
+      ms: (r as { ms?: unknown }).ms,
       usage: (r as { usage?: unknown }).usage,
     })),
+
+  ping: (body: object) =>
+    fetch(`${API}/api/llm/ping`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then(res_ok),
 };
