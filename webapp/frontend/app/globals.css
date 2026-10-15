@@ -552,7 +552,6 @@ input[type="range"].temp::-moz-range-thumb { width: 16px; height: 16px; border-r
   background: var(--surface-2); margin-bottom: 5px; font-size: 12px; }
 .rank-row .no { color: var(--accent); font-weight: 700; min-width: 26px; }
 .rank-row .skor { color: var(--text-muted); font-size: 11px; margin-left: auto; white-space: nowrap; }
-.rerank-btn-row { margin-top: auto; padding: 10px 16px; border-top: 1px solid var(--border); }
 
 /* ---------------- source modal (citation detail) ---------------- */
 .src-scrim { position: fixed; inset: 0; z-index: 60; display: flex;

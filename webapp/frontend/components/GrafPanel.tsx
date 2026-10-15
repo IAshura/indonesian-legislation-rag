@@ -3,7 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { TraceNode } from "../lib/types";
 import { t, type Lang } from "../lib/i18n";
 
-import { nodeGlyph } from "./icons";
+import { I, nodeGlyph } from "./icons";
 
 const AKSEN = "var(--accent)";
 const NETRAL = "var(--text-muted)";
@@ -393,8 +393,8 @@ bahasa: Lang;
           <div className="graf-popup">
             <div className="head">
               {kembaliRantai != null && (
-                <button className="x" data-tip={T("graf.kembali")}
-                        style={{ marginRight: 2 }}
+                <button className="icon-btn sq" data-tip={T("graf.kembali")}
+                        aria-label={T("graf.kembali")}
                         onClick={() => { setSel(null); setSelGrup(kembaliRantai); setKembaliRantai(null); }}>
                   ←
                 </button>
@@ -408,19 +408,14 @@ bahasa: Lang;
                 <button className={render === "raw" ? "aktif" : ""} data-tip={T("graf.node.mentah.tip")}
                         onClick={() => setRender("raw")}>{T("graf.node.mentah")}</button>
               </span>
-              <button className="x" data-tip={T("graf.node.tutup")}
-                        onClick={() => { setSel(null); setKembaliRantai(null); }}>✕</button>
+              <button className="icon-btn sq" data-tip={T("graf.node.tutup")}
+                      aria-label={T("graf.node.tutup")}
+                        onClick={() => { setSel(null); setKembaliRantai(null); }}><I.x /></button>
             </div>
             <div className="body" data-testid="popup-body">
               {render === "raw"
                 ? <pre>{JSON.stringify(trace[sel].detail, null, 2)}</pre>
                 : <CleanerNode node={trace[sel]} lang={L} />}
-            </div>
-            <div className="rerank-btn-row">
-              <button className="btn" data-tip={T("graf.replay.tip")}
-                        onClick={() => { onReplay(sel); setSel(null); setKembaliRantai(null); }}>
-                {T("graf.replay")}
-              </button>
             </div>
           </div>
         </div>
