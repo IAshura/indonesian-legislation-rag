@@ -68,7 +68,7 @@ export default function Halaman() {
 
   // ---- UI shell ----
   const [sidebarTutup, setSidebarTutup] = useState(false);
-  const [drawer, setDrawer] = useState<null | "setting" | "graf">(null);
+  const [drawer, setDrawer] = useState<null | "setting" | "graf">("setting");
   const [cari, setCari] = useState("");
   const [showAbout, setShowAbout] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);

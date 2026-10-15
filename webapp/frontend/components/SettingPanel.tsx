@@ -136,9 +136,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
                   {showKey ? <I.eyeOff /> : <I.eye />}
                 </button>
               </div>
-              {setting.llm.api_key && (
-                <div className="help"><span className="saved-tag">✓ {T("set.apikey.tersimpan")}</span></div>
-              )}
             </div>
             <div className="field">
               <label>{T("set.model")}</label>
@@ -162,17 +159,17 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
                 <button type="button" aria-label="−"
                         onClick={() => set({ llm: { ...setting.llm,
                           maxTokens: Math.max(16, (setting.llm.maxTokens ?? 8192) - 512) } })}>−</button>
-                <input type="number" min={16} max={8192} value={setting.llm.maxTokens ?? 8192}
+                <input type="number" min={16} max={64000} value={setting.llm.maxTokens ?? 8192}
                        onChange={(e) => set({ llm: { ...setting.llm,
-                         maxTokens: Math.max(16, Math.min(8192, Number(e.target.value) || 8192)) } })} />
+                         maxTokens: Math.max(16, Math.min(64000, Number(e.target.value) || 8192)) } })} />
                 <button type="button" aria-label="+"
                         onClick={() => set({ llm: { ...setting.llm,
-                          maxTokens: Math.min(8192, (setting.llm.maxTokens ?? 8192) + 512) } })}>+</button>
+                          maxTokens: Math.min(64000, (setting.llm.maxTokens ?? 8192) + 512) } })}>+</button>
               </div>
               <div className="help">{T("set.maxtok.help")}</div>
             </div>
             <div style={{ marginBottom: 4 }}>
-              <button className="btn secondary" data-tip={T("set.test.tip")} onClick={testKoneksi}
+              <button className="btn secondary block" data-tip={T("set.test.tip")} onClick={testKoneksi}
                       disabled={testState === "busy"}>
                 {testState === "busy" ? T("set.test.busy") : T("set.test")}
               </button>
