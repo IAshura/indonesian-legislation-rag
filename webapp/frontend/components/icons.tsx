@@ -16,6 +16,9 @@ export const I = {
       <path d="M5 7l-2.5 6a3.5 3.5 0 0 0 7 0L7 7" /><path d="M19 7l-2.5 6a3.5 3.5 0 0 0 7 0L21 7" />
       <path d="M8 21h8" /></svg>
   ),
+  back: (p: SVGProps<SVGSVGElement> = {}) => (
+    <svg {...base(p)}><path d="M19 12H5" /><path d="m12 19-7-7 7-7" /></svg>
+  ),
   menu: (p: SVGProps<SVGSVGElement> = {}) => (
     <svg {...base(p)}><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></svg>
   ),

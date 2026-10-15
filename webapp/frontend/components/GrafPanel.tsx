@@ -391,26 +391,32 @@ bahasa: Lang;
           }
         }} onClick={(e) => e.stopPropagation()}>
           <div className="graf-popup">
-            <div className="head">
-              {kembaliRantai != null && (
-                <button className="icon-btn sq" data-tip={T("graf.kembali")}
-                        aria-label={T("graf.kembali")}
-                        onClick={() => { setSel(null); setSelGrup(kembaliRantai); setKembaliRantai(null); }}>
-                  ←
-                </button>
-              )}
-              <span style={{ fontSize: 17 }}>{nodeGlyph(trace[sel].type)}</span>
-              <span className="tipe">{trace[sel].type}</span>
-              <span style={{ color: "var(--muted)", fontSize: 12 }}>{trace[sel].id}</span>
-              <span className="mode-raw-cleaner" style={{ marginLeft: 14 }}>
-                <button className={render === "cleaner" ? "aktif" : ""} data-tip={T("graf.node.bersih.tip")}
-                        onClick={() => setRender("cleaner")}>{T("graf.node.bersih")}</button>
-                <button className={render === "raw" ? "aktif" : ""} data-tip={T("graf.node.mentah.tip")}
-                        onClick={() => setRender("raw")}>{T("graf.node.mentah")}</button>
-              </span>
-              <button className="icon-btn sq" data-tip={T("graf.node.tutup")}
-                      aria-label={T("graf.node.tutup")}
+            <div className="head pop-head">
+              <div className="pop-side">
+                {kembaliRantai != null && (
+                  <button className="icon-btn sq" data-tip={T("graf.kembali")}
+                          aria-label={T("graf.kembali")}
+                          onClick={() => { setSel(null); setSelGrup(kembaliRantai); setKembaliRantai(null); }}>
+                    <I.back />
+                  </button>
+                )}
+              </div>
+              <div className="pop-mid">
+                <span className="pop-glyph">{nodeGlyph(trace[sel].type)}</span>
+                <span className="tipe">{trace[sel].type}</span>
+                <span className="pop-id">{trace[sel].id}</span>
+              </div>
+              <div className="pop-side pop-right">
+                <span className="mode-raw-cleaner">
+                  <button className={render === "cleaner" ? "aktif" : ""} data-tip={T("graf.node.bersih.tip")}
+                          onClick={() => setRender("cleaner")}>{T("graf.node.bersih")}</button>
+                  <button className={render === "raw" ? "aktif" : ""} data-tip={T("graf.node.mentah.tip")}
+                          onClick={() => setRender("raw")}>{T("graf.node.mentah")}</button>
+                </span>
+                <button className="icon-btn sq" data-tip={T("graf.node.tutup")}
+                        aria-label={T("graf.node.tutup")}
                         onClick={() => { setSel(null); setKembaliRantai(null); }}><I.x /></button>
+              </div>
             </div>
             <div className="body" data-testid="popup-body">
               {render === "raw"

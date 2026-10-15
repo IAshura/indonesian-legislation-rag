@@ -538,6 +538,17 @@ input[type="range"].temp::-moz-range-thumb { width: 16px; height: 16px; border-r
   text-transform: uppercase; letter-spacing: .5px; }
 .graf-popup .head .x { margin-left: auto; background: none; border: none; color: var(--text-muted);
   cursor: pointer; font-size: 17px; min-width: 32px; min-height: 32px; }
+/* node popup header: back | centered title | toggle + close */
+.graf-popup .head.pop-head { display: grid; grid-template-columns: auto 1fr auto; align-items: center; }
+.pop-side { display: flex; align-items: center; gap: 8px; min-width: 36px; }
+.pop-side.pop-right { justify-content: flex-end; }
+.pop-mid { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; overflow: hidden; }
+.pop-mid .tipe { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pop-glyph { display: inline-flex; color: var(--accent); flex: none; }
+.pop-glyph svg { width: 16px; height: 16px; }
+.pop-id { color: var(--text-muted); font-size: 12px; flex: none; font-variant-numeric: tabular-nums; }
+.graf-popup .head .icon-btn { background: color-mix(in srgb, var(--text) 9%, transparent);
+  border-color: var(--border-strong); color: var(--text); }
 .mode-raw-cleaner { display: flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; }
 .mode-raw-cleaner button { background: none; border: none; color: var(--text-muted); padding: 5px 14px;
   cursor: pointer; font-size: 12px; }
