@@ -364,12 +364,13 @@ h1, h2, h3 { text-wrap: balance; }
 .ov-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .ov-title { font-family: var(--font-serif); font-size: 20px; font-weight: 500; flex: 1; }
 .ov-body { flex: 1; overflow: auto; padding: 16px; min-height: 0; }
-/* segmented tabs: no box — three segments, active fills its whole cell */
-.set-tabs { display: flex; gap: 0; margin: -8px -16px 16px; padding: 0 16px;
+/* segmented tabs: flat adjacent blocks, thin dividers, active fills its cell */
+.set-tabs { display: flex; gap: 0; margin: -8px -16px 16px; padding: 0;
   background: transparent; border-bottom: 1px solid var(--border); }
 .set-tabs button { flex: 1; padding: 13px 4px 12px; background: none; border: none; cursor: pointer;
   border-radius: 0; color: var(--text-muted); font-weight: 600; font-size: 13px;
   transition: background .15s var(--ease), color .15s var(--ease); }
+.set-tabs button + button { border-left: 1px solid var(--border); }
 .set-tabs button.on { background: var(--surface-hover); color: var(--text); }
 /* flat sections: whitespace + hairline, no nested cards */
 .set-sec { padding: 14px 0; border-bottom: 1px solid var(--border); }
