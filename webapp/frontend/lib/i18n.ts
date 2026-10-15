@@ -180,6 +180,11 @@ const ID: Record<string, string> = {
   "chat.disclaimer": "Informasi bersifat umum, bukan nasihat hukum. Tetap verifikasi pada sumber resmi (JDIH).",
   // ---- sumber ----
   "sumber.salin": "Salin", "sumber.relevansi": "Relevansi",
+  // ---- modal sumber ----
+  "src.salin.kutipan": "Salin kutipan", "src.salin.sitasi": "Salin sitasi",
+  "src.tersalin": "Tersalin",
+  "src.potong": "Cuplikan dipotong. Baca teks lengkap di sumber resmi.",
+  "src.sebelum": "Sumber sebelumnya", "src.sesudah": "Sumber berikutnya",
   // ---- sidebar ----
   "side.grup.hari_ini": "Hari ini", "side.grup.kemarin": "Kemarin",
   "side.grup.minggu": "7 hari terakhir", "side.grup.lama": "Lebih lama",
@@ -367,6 +372,11 @@ const EN: Record<string, string> = {
   "chat.disclaimer": "General information only, not legal advice. Always verify against official sources (JDIH).",
   // ---- sources ----
   "sumber.salin": "Copy", "sumber.relevansi": "Relevance",
+  // ---- source modal ----
+  "src.salin.kutipan": "Copy quote", "src.salin.sitasi": "Copy citation",
+  "src.tersalin": "Copied",
+  "src.potong": "Excerpt truncated. Read the full text at the official source.",
+  "src.sebelum": "Previous source", "src.sesudah": "Next source",
   // ---- sidebar ----
   "side.grup.hari_ini": "Today", "side.grup.kemarin": "Yesterday",
   "side.grup.minggu": "Previous 7 days", "side.grup.lama": "Older",
