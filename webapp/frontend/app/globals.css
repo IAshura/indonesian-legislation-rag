@@ -283,8 +283,8 @@ h1, h2, h3 { text-wrap: balance; }
   padding: 1px 9px; font-size: 11px; font-weight: 700; margin-bottom: 7px; }
 /* citations: dark chips, gold text (matches reference) */
 .cite { display: inline-block; background: #2B251C; color: var(--accent); border: none;
-  border-radius: 6px; padding: 0 6px; margin: 0 2px; cursor: pointer;
-  font-family: var(--font-sans); font-size: 12px; font-weight: 700;
+  border-radius: 7px; padding: 1px 8px; margin: 0 2px; cursor: pointer;
+  font-family: var(--font-sans); font-size: 13px; font-weight: 800;
   transition: background .12s var(--ease), color .12s var(--ease);
   white-space: nowrap; font-variant-numeric: tabular-nums; }
 .cite:hover { background: var(--accent); color: var(--on-accent); }
