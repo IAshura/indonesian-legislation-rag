@@ -85,7 +85,7 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
       const pt = tk?.prompt_tokens || 0;
       const ct = tk?.completion_tokens || 0;
       setTestState("ok");
-      setTestMsg(`${T("set.test.ok")} · ${ms} ms · ${pt}/${ct} token`);
+      setTestMsg(`${T("set.test.ok")} · ${ms} ms · used : ${pt}/${ct} token`);
       if (setting.dryRun) set({ dryRun: false });   // koneksi OK -> user mau live
     } catch (e) { setTestState("fail"); setTestMsg((e as Error).message); }
   };
