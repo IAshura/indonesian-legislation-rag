@@ -296,7 +296,9 @@ export default function Halaman() {
           <div className="sidebar-head">
             <button className="btn block" data-tip={T("page.baru.tip")}
                     onClick={() => { setTurns([]); setAktifTurn(-1); setError("");
-                      setTracesGraf([]); }}>
+                      setTracesGraf([]);
+                      setTotalToken(
+                        { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, cached_tokens: 0 }); }}>
               {T("page.baru")}
             </button>
           </div>
