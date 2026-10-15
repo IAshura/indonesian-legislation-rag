@@ -204,12 +204,12 @@ h1, h2, h3 { text-wrap: balance; }
 .menu-pop button.danger { color: var(--danger); }
 /* delete: plain red row normally, white on dark-red when hovered */
 .menu-del-box { border-radius: 10px; padding: 3px; margin: 2px; }
-.menu-del { display: flex; width: 100%; gap: 8px; align-items: center; cursor: pointer;
+.menu-pop button.menu-del { display: flex; width: 100%; gap: 8px; align-items: center; cursor: pointer;
   background: transparent; border: none;
   color: var(--danger); font-size: 13px; font-weight: 600; padding: 9px 10px;
   border-radius: 8px; text-align: left;
   transition: background .15s var(--ease), color .15s var(--ease); }
-.menu-del:hover { background: color-mix(in srgb, var(--danger) 55%, black); color: #fff; }
+.menu-pop button.menu-del:hover { background: color-mix(in srgb, var(--danger) 55%, black); color: #fff; }
 .side-actions { display: none; }
 .side-empty { color: var(--text-faint); font-size: 13px; padding: 12px; text-align: center; }
 .model-chip { margin: 8px 14px 14px; display: flex; align-items: center; gap: 8px; width: calc(100% - 28px);
