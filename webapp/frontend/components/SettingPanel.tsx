@@ -343,7 +343,6 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
             <div className="set-sec-t">{T("set.topk")}</div>
             <div style={{ display: "flex", gap: 8 }}>
               <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                <label>{T("set.topk")}</label>
                 <input type="number" min={1} max={50} value={setting.topK}
                        onChange={(e) => {
                          const v = Math.max(1, Math.min(50, Number(e.target.value) || 1));

@@ -258,7 +258,6 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); kirim(); } }}
             />
             <div className="composer-foot">
-              <span className="composer-hint">{T("chat.kirim.hint")}</span>
               {busy ? (
                 <button className="send-btn stop" data-tip={T("chat.stop.tip")} aria-label={T("chat.stop")}
                         onClick={onStop}><I.stop /></button>
