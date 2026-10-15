@@ -1,5 +1,6 @@
 "use client";
 import { Fragment, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { api } from "../lib/store";
 import { Citation, ChatTurn } from "../lib/types";
 import { t, type Lang } from "../lib/i18n";
@@ -387,40 +388,64 @@ function BubbleDenganSitasi({ text, citations, cariGlobal, onDetail }: {
     </span>
   );
 }
-
-// Citation chip: hover card flips below/above based on viewport room
-// (default below; above only when there is no room underneath).
+// Citation chip: hover card is portaled to <body> (position:fixed) so it is
+// never clipped by the scrolling chat column. Default below the chip;
+// flips above only when there is no room underneath; always kept inside
+// the viewport horizontally.
 function Cite({ n, c, onOpen }: {
   n: number;
   c: Citation | undefined;
   onOpen: (c: Citation | undefined, n: number) => void;
 }) {
-  const [bawah, setBawah] = useState(true);
-  const ref = useRef<HTMLSpanElement>(null);
-  const arah = () => {
+  const [buka, setBuka] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const ref = useRef<HTMLButtonElement>(null);
+  const hitung = () => {
     const r = ref.current?.getBoundingClientRect();
-    if (r) {
-      const ruangBawah = window.innerHeight - r.bottom;
-      setBawah(ruangBawah >= 240 || ruangBawah >= r.top);
-    }
+    if (!r) return;
+    const w = Math.min(300, window.innerWidth - 16);
+    const h = 220; // estimated card height
+    const ruangBawah = window.innerHeight - r.bottom;
+    const atas = ruangBawah < h + 16 && r.top >= ruangBawah;
+    const top = atas ? Math.max(8, r.top - h - 8) : r.bottom + 8;
+    const tengah = r.left + r.width / 2;
+    const left = Math.max(8, Math.min(tengah - w / 2, window.innerWidth - w - 8));
+    setPos({ top, left });
   };
+  const bukaPop = () => { hitung(); setBuka(true); };
+  useEffect(() => {
+    if (!buka) return;
+    const tutup = () => setBuka(false);
+    window.addEventListener("scroll", tutup, true);
+    window.addEventListener("resize", tutup);
+    return () => {
+      window.removeEventListener("scroll", tutup, true);
+      window.removeEventListener("resize", tutup);
+    };
+  }, [buka]);
   return (
-    <span className="cite-wrap" ref={ref} onMouseEnter={arah}>
-      <button type="button" className="cite" onClick={() => onOpen(c, n)} onFocus={arah}
+    <span className="cite-wrap" onMouseLeave={() => setBuka(false)}>
+      <button type="button" ref={ref} className="cite"
+              onClick={() => onOpen(c, n)}
+              onMouseEnter={bukaPop} onFocus={bukaPop} onBlur={() => setBuka(false)}
               aria-label={`[${n}]${c ? ` ${c.official_title} — ${c.citation_str}` : ""}`}>
         [{n}]
       </button>
-      <span className={`cite-pop ${bawah ? "bawah" : "atas"}`} role="tooltip">
-        {c ? (
-          <>
-            <b>[{n}] {c.official_title}</b>
-            <span>{c.citation_str}</span>
-            <span>{(c.text || "").slice(0, 220)}{(c.text || "").length > 220 && "…"}</span>
-          </>
-        ) : (
-          <span>[{n}]</span>
-        )}
-      </span>
+      {buka && pos && createPortal(
+        <span className="cite-pop portal" role="tooltip"
+              style={{ top: pos.top, left: pos.left }}>
+          {c ? (
+            <>
+              <b>[{n}] {c.official_title}</b>
+              <span>{c.citation_str}</span>
+              <span>{(c.text || "").slice(0, 220)}{(c.text || "").length > 220 && "…"}</span>
+            </>
+          ) : (
+            <span>[{n}]</span>
+          )}
+        </span>,
+        document.body
+      )}
     </span>
   );
 }
