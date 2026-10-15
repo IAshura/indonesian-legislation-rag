@@ -281,14 +281,13 @@ h1, h2, h3 { text-wrap: balance; }
 .act-btn svg { width: 16px; height: 16px; }
 .bubble .dry { background: var(--accent-soft); color: var(--accent); border-radius: 7px; display: inline-block;
   padding: 1px 9px; font-size: 11px; font-weight: 700; margin-bottom: 7px; }
-/* citations: muted brass-gold chips, dark text (matches reference) */
-.cite { display: inline-block; background: color-mix(in srgb, var(--accent) 80%, black);
-  color: var(--on-accent); border: none;
+/* citations: dark chips, gold text (matches reference) */
+.cite { display: inline-block; background: #2B251C; color: var(--accent); border: none;
   border-radius: 6px; padding: 0 6px; margin: 0 2px; cursor: pointer;
-  font-family: var(--font-sans); font-size: 12px;
-  font-weight: 700; transition: filter .12s var(--ease);
+  font-family: var(--font-sans); font-size: 12px; font-weight: 700;
+  transition: background .12s var(--ease), color .12s var(--ease);
   white-space: nowrap; font-variant-numeric: tabular-nums; }
-.cite:hover { filter: brightness(1.12); }
+.cite:hover { background: var(--accent); color: var(--on-accent); }
 /* citation hover card: portaled to body, fixed, always inside viewport */
 .cite-wrap { position: relative; display: inline-block; }
 button.cite { font: inherit; }
