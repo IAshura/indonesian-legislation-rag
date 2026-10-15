@@ -17,13 +17,15 @@ const SARAN_EN = [
   "What religious guarantees exist in the 1945 Constitution?",
 ];
 
-export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bahasa, onKirim, onCiteClick }: {
+export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bahasa, totalToken, onResetToken, onKirim, onCiteClick }: {
   turns: ChatTurn[];
   busy: boolean;
   error: string;
   dryRun: boolean;
   semuaSitasi?: Citation[];
   bahasa: Lang;
+  totalToken: { prompt_tokens: number; completion_tokens: number; total_tokens: number; cached_tokens: number };
+  onResetToken: () => void;
   onKirim: (q: string) => void;
   onCiteClick: (c: Citation) => void;
 }) {
@@ -61,6 +63,11 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
 
   return (
     <>
+      <div className="token-pill"
+           title={`${totalToken.prompt_tokens.toLocaleString(LOC)} in + ${totalToken.completion_tokens.toLocaleString(LOC)} out${totalToken.cached_tokens > 0 ? ` (${T("token.cache")} ${totalToken.cached_tokens.toLocaleString(LOC)})` : ""}`}>
+        <span>🎟️ {totalToken.total_tokens.toLocaleString(LOC)} {T("page.token")}</span>
+        <button className="mini-btn" data-tip={T("page.reset.tip")} onClick={onResetToken}>↺</button>
+      </div>
       <div className="chat-scroll" ref={scrollRef}>
         <div className="chat-inner">
           {turns.length === 0 && (

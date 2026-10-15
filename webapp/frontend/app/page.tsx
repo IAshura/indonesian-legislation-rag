@@ -330,20 +330,6 @@ export default function Halaman() {
               </div>
             ))}
           </div>
-          <div className="side-foot">
-            {T("page.sesi")} <b>{totalToken.total_tokens.toLocaleString(LOC)}</b> {T("page.token")}
-            <span style={{ display: "block" }}>
-              {totalToken.prompt_tokens.toLocaleString(LOC)} in +{" "}
-              {totalToken.completion_tokens.toLocaleString(LOC)} out
-              {totalToken.cached_tokens > 0 &&
-                ` (${T("token.cache")} ${totalToken.cached_tokens.toLocaleString(LOC)})`}
-            </span>
-            <button className="mini-btn" style={{ marginTop: 4 }} data-tip={T("page.reset.tip")}
-                    onClick={() => setTotalToken(
-                      { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, cached_tokens: 0 })}>
-              {T("page.reset")}
-            </button>
-          </div>
         </aside>
 
         {/* ================= center: chat ================= */}
@@ -351,7 +337,9 @@ export default function Halaman() {
           <ChatPanel
             turns={turns} busy={busy} error={error} dryRun={setting.dryRun}
             semuaSitasi={turns.flatMap((t) => t.citations || [])}
-            bahasa={L}
+            bahasa={L} totalToken={totalToken}
+            onResetToken={() => setTotalToken(
+              { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, cached_tokens: 0 })}
             onKirim={(q) => kirim(q)}
             onCiteClick={(c) => alert(c.official_title
               ? `[S${c.n}] ${c.official_title} — ${c.citation_str}\n\n` +
