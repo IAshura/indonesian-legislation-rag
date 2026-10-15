@@ -349,9 +349,9 @@ button.cite { font: inherit; }
   background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 .status-line { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); padding: 4px 0; }
-.spin { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--accent); animation: denyut 1.8s ease-in-out infinite; vertical-align: 0; }
-@keyframes denyut { 0%, 100% { opacity: .25; transform: scale(.85); } 50% { opacity: 1; transform: scale(1); } }
+.spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border-strong);
+  border-top-color: var(--accent); border-radius: 50%; animation: spin 2.4s linear infinite; vertical-align: -2px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .warnline { color: var(--danger); font-size: 13px; background: color-mix(in srgb, var(--danger) 8%, transparent);
   border: 1px solid var(--danger); border-radius: 12px; padding: 9px 13px; }
 
