@@ -3,18 +3,22 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { TraceNode } from "../lib/types";
 import { t, type Lang } from "../lib/i18n";
 
-const TIPE: Record<string, { ikon: string; warna: string }> = {
-  user_ask: { ikon: "🧑", warna: "#5b9dff" },
-  llm_ask: { ikon: "🤖", warna: "#fb923c" },
-  embed_query: { ikon: "🧭", warna: "#34d399" },
-  retrieve_dense: { ikon: "🔎", warna: "#5b9dff" },
-  retrieve_bm25: { ikon: "🔤", warna: "#a78bfa" },
-  fuse_rrf: { ikon: "⚖️", warna: "#f472b6" },
-  rerank: { ikon: "🏆", warna: "#fbbf24" },
-  join_parent: { ikon: "🧩", warna: "#34d399" },
-  build_prompt: { ikon: "📝", warna: "#5b9dff" },
-  llm_answer: { ikon: "💬", warna: "#f87171" },
-  tool_call: { ikon: "🔧", warna: "#a78bfa" },
+import { nodeGlyph } from "./icons";
+
+const AKSEN = "var(--accent)";
+const NETRAL = "var(--text-muted)";
+const TIPE: Record<string, { warna: string }> = {
+  user_ask: { warna: AKSEN },
+  llm_ask: { warna: NETRAL },
+  embed_query: { warna: NETRAL },
+  retrieve_dense: { warna: NETRAL },
+  retrieve_bm25: { warna: NETRAL },
+  fuse_rrf: { warna: NETRAL },
+  rerank: { warna: NETRAL },
+  join_parent: { warna: NETRAL },
+  build_prompt: { warna: NETRAL },
+  llm_answer: { warna: AKSEN },
+  tool_call: { warna: NETRAL },
 };
 
 export default function GrafPanel({ trace, onReplay, bahasa }: {
@@ -352,7 +356,6 @@ bahasa: Lang;
         }} onClick={(e) => e.stopPropagation()}>
           <div className="graf-popup">
             <div className="head">
-              <span style={{ fontSize: 17 }}>⚙️</span>
               <span className="tipe">{T("graf.rantai")} ({selGrup.length} {T("proses.langkah")})</span>
               <button className="x" data-tip={T("graf.rantai.tutup")} onClick={() => setSelGrup(null)}>✕</button>
             </div>
@@ -360,13 +363,13 @@ bahasa: Lang;
               {selGrup.map((pi, k) => {
                 const n = trace[pi];
                 if (!n) return null;
-                const info = TIPE[n.type] || { ikon: "•", warna: "#8b95a8" };
+                const info = TIPE[n.type] || { warna: "var(--text-faint)" };
                 return (
                   <div key={n.id + pi}>
                     <div className="nnode" style={{ width: "100%", cursor: "pointer" }}
                          onClick={() => { setKembaliRantai(selGrup); setSelGrup(null); setSel(pi); setRender("cleaner"); }}>
                       <div className="tipe" style={{ color: info.warna }}>
-                        <span>{info.ikon}</span><span>{n.type}</span>
+                        <span>{nodeGlyph(n.type)}</span><span>{n.type}</span>
                       </div>
                       <div className="lbl">{n.label}</div>
                       <NodeSubTeks node={n} lang={L} />
@@ -396,7 +399,7 @@ bahasa: Lang;
                   ←
                 </button>
               )}
-              <span style={{ fontSize: 17 }}>{TIPE[trace[sel].type]?.ikon || "•"}</span>
+              <span style={{ fontSize: 17 }}>{nodeGlyph(trace[sel].type)}</span>
               <span className="tipe">{trace[sel].type}</span>
               <span style={{ color: "var(--muted)", fontSize: 12 }}>{trace[sel].id}</span>
               <span className="mode-raw-cleaner" style={{ marginLeft: 14 }}>
@@ -432,21 +435,17 @@ function KartuNode({ n, i, sel, onPilih, refKunci, refCb, lang }: {
   lang: Lang;
 }) {
   const L: Lang = lang || "id";
-  const info = TIPE[n.type] || { ikon: "•", warna: "#8b95a8" };
+  const info = TIPE[n.type] || { warna: "var(--text-faint)" };
   const refEl = refKunci && refCb ? refCb(refKunci) : undefined;
-  // Identitas peran: user 🧑 biru, tanya-internal-LLM 🤖 oranye,
-  // jawaban 💬 hijau — proses lain netral.
-  const aksen = n.type === "user_ask" ? "#5b9dff"
-    : n.type === "llm_ask" ? "#fb923c"
-    : n.type === "llm_answer" ? "#34d399" : undefined;
-  const ikon = n.type === "user_ask" ? "🧑" : info.ikon;
+  // Role identity: user question + final answer in accent, other steps neutral.
+  const aksen = n.type === "user_ask" || n.type === "llm_answer" ? AKSEN : undefined;
   return (
     <div className={`nnode ${sel === i ? "klik" : ""}`}
          ref={refEl}
          style={aksen ? { borderLeft: `3px solid ${aksen}` } : undefined}
          onClick={(e) => { e.stopPropagation(); onPilih(i); }}>
       <div className="tipe" style={{ color: aksen || info.warna }}>
-        <span>{ikon}</span><span>{n.type}</span>
+        <span>{nodeGlyph(n.type)}</span><span>{n.type}</span>
       </div>
       <div className="lbl">{n.label}</div>
       <NodeSubTeks node={n} lang={L} />

@@ -8,9 +8,22 @@ import ChatPanel from "../components/ChatPanel";
 import SettingPanel from "../components/SettingPanel";
 import GrafPanel from "../components/GrafPanel";
 import TipGlobal from "../components/TipGlobal";
+import { I } from "../components/icons";
 import { t, type Lang } from "../lib/i18n";
 
 type Theme = "dark" | "light";
+
+function grupTanggal(h: HistoryMeta): "hari_ini" | "kemarin" | "minggu" | "lama" {
+  const d = new Date(h.created_at);
+  if (isNaN(+d)) return "lama";
+  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day(new Date()) - day(d)) / 86400000);
+  if (diff <= 0) return "hari_ini";
+  if (diff === 1) return "kemarin";
+  if (diff <= 7) return "minggu";
+  return "lama";
+}
+const URUT_GRUP = ["hari_ini", "kemarin", "minggu", "lama"] as const;
 
 export default function Halaman() {
   const [setting, setSetting] = useState<Settings>(DEFAULT_SETTINGS);
@@ -19,7 +32,6 @@ export default function Halaman() {
   const LOC = L === "id" ? "id-ID" : "en-US";
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [historyList, setHistoryList] = useState<HistoryMeta[]>([]);
-  const [aktifTurn, setAktifTurn] = useState(-1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   // conversation memory: all turns of this session go to the LLM + graph
@@ -39,12 +51,14 @@ export default function Halaman() {
     } catch { /* ignore */ }
   }, [totalToken]);
 
-  // ---- theme (dark/light) ----
+  // ---- theme (dark/light, follows OS when never chosen) ----
   const [theme, setTheme] = useState<Theme>("dark");
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem("rag-hukum-theme");
-      if (saved === "light" || saved === "dark") setTheme(saved);
+      if (saved === "light" || saved === "dark") { setTheme(saved); return; }
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches)
+        setTheme("light");
     } catch { /* ignore */ }
   }, []);
   useEffect(() => {
@@ -57,32 +71,48 @@ export default function Halaman() {
   const [drawer, setDrawer] = useState<null | "setting" | "graf">(null);
   const [cari, setCari] = useState("");
   const [showAbout, setShowAbout] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Esc closes drawer / about / menu
   useEffect(() => {
-    if (!showAbout) return;
-    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAbout(false); };
+    if (!showAbout && !drawer && !openMenu) return;
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setShowAbout(false); setDrawer(null); setOpenMenu(null); }
+    };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [showAbout]);
-  // docked panel width (draggable via the handle between chat and panel)
-  const [lebarKanan, setLebarKanan] = useState(400);
-  const dragKanan = useRef<{ sx: number; awal: number } | null>(null);
+  }, [showAbout, drawer, openMenu]);
+  // focus the drawer close button when it opens (keyboard users)
   useEffect(() => {
-    const move = (e: MouseEvent) => {
-      if (!dragKanan.current) return;
-      const w = dragKanan.current.awal + (dragKanan.current.sx - e.clientX);
-      setLebarKanan(Math.max(300, Math.min(640, w)));
+    if (drawer) closeBtnRef.current?.focus();
+  }, [drawer]);
+  // Cmd/Ctrl+K focuses history search
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (sidebarTutup) setSidebarTutup(false);
+        searchRef.current?.focus();
+      }
     };
-    const up = () => { dragKanan.current = null; document.body.style.cursor = ""; };
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
-    return () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
-  }, []);
-  // Esc closes the floating drawer
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [sidebarTutup]);
+
+  // ---- autosave toast (debounced "Saved") ----
+  const pertama = useRef(true);
+  const [toast, setToast] = useState("");
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setDrawer(null); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+    if (pertama.current) { pertama.current = false; return; }
+    const id = setTimeout(() => {
+      setToast(t(setting.bahasa || "id", "toast.tersimpan"));
+      setTimeout(() => setToast(""), 1800);
+    }, 1200);
+    return () => clearTimeout(id);
+  }, [setting]);
 
   // load settings + history
   useEffect(() => {
@@ -106,8 +136,9 @@ export default function Halaman() {
     setTurns((t) => [...t, { role: "user", text: q },
       { role: "bot", text: "", streaming: true, status: "Menyiapkan…",
         trace: [], mode: s.mode, dryRun: s.dryRun, replayOfNodeId }]);
-    setAktifTurn((t) => t + 2);
     setBusy(true); setError("");
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
     // mutate the LAST bot bubble (this send; sends are busy-locked)
     const ubahBot = (fn: (b: ChatTurn) => ChatTurn) =>
       setTurns((t) => {
@@ -195,14 +226,22 @@ export default function Halaman() {
           api.history().then((h) => setHistoryList(h.daftar || [])).catch(() => {});
         }
         // "error" is thrown by askStream as an exception
-      });
+      }, ctrl.signal);
     } catch (e) {
-      setError((e as Error).message || "gagal memanggil /api/ask/stream");
-      ubahBot((b) => ({ ...b, streaming: false, status: "gagal" }));
+      if ((e as Error).name === "AbortError") {
+        ubahBot((b) => ({ ...b, streaming: false,
+          status: t(s.bahasa || setting.bahasa || "id", "chat.stop.status") }));
+      } else {
+        setError((e as Error).message || "gagal memanggil /api/ask/stream");
+        ubahBot((b) => ({ ...b, streaming: false, status: "gagal" }));
+      }
     } finally {
+      abortRef.current = null;
       setBusy(false);
     }
   }, [busy, setting, turns, tracesGraf]);
+
+  const stop = useCallback(() => { abortRef.current?.abort(); }, []);
 
   const bukaRiwayat = useCallback(async (id: string) => {
     try {
@@ -214,19 +253,20 @@ export default function Halaman() {
           reasoning: (d as { reasoning?: string | null }).reasoning ?? null,
           reasoningRaw: (d as { reasoning_raw?: string | null }).reasoning_raw ?? null },
       ]);
-      setAktifTurn(1);
       // graph loads from history: fill with this history's trace (not cumulative)
       setTracesGraf(d.trace || []);
+      setOpenMenu(null);
     } catch (e) { setError((e as Error).message); }
   }, []);
 
   const hapusRiwayat = useCallback(async (id: string) => {
     await api.historyDelete(id);
     setHistoryList((h) => h.filter((x) => x.id !== id));
+    setOpenMenu(null);
   }, []);
 
-  const chatAktif = turns.length > 0 ? turns[turns.length - 1] : undefined;
-  const aktifId = (chatAktif as { historyId?: string } | undefined)?.historyId;
+  const aktifId = turns.length > 0
+    ? (turns[turns.length - 1] as { historyId?: string }).historyId : undefined;
   // graph = cumulative for this session (follow-up chats keep growing it)
   const traceAktif: TraceNode[] = tracesGraf.length > 0
     ? tracesGraf
@@ -237,81 +277,67 @@ export default function Halaman() {
     kirim(q, undefined, traceAktif[nodeIdx]?.id, nodeIdx + 1);
   }, [turns, traceAktif, kirim]);
 
-  const riwayatTampil = cari.trim()
+  const riwayatCari = cari.trim()
     ? historyList.filter((h) => (h.question || "").toLowerCase().includes(cari.trim().toLowerCase()))
     : historyList;
+  const grup: Record<string, HistoryMeta[]> = { hari_ini: [], kemarin: [], minggu: [], lama: [] };
+  riwayatCari.forEach((h) => { grup[grupTanggal(h)].push(h); });
 
-  const gantiBahasa = () => {
-    const next: Lang = L === "id" ? "en" : "id";
-    setSetting({ ...setting, bahasa: next });
-  };
+  const gantiMode = () =>
+    setSetting({ ...setting, mode: setting.mode === "agent" ? "fixed" : "agent" });
 
   return (
     <div className="app">
       <TipGlobal />
-      {/* ================= header ================= */}
+      {/* ================= header 56px ================= */}
       <header className="app-header">
-        <button className="icon-btn" data-tip={sidebarTutup ? T("page.buka") : T("page.tutup")}
+        <button className="icon-btn sq" data-tip={sidebarTutup ? T("page.buka") : T("page.tutup")}
+                aria-label={sidebarTutup ? T("page.buka") : T("page.tutup")}
                 onClick={() => setSidebarTutup((v) => !v)}>
-          ☰
+          <I.menu />
         </button>
-        <div className="brand">ChatBOT</div>
-        {setting.dryRun && (
-          <span className="tag bm25" style={{ fontSize: 11 }}>DRY-RUN</span>
-        )}
+        <div className="brand">
+          <span className="logo-mark"><I.scales /></span>
+          Indonesian Law RAG
+        </div>
         <div className="header-spacer" />
         <div className="header-status">
-          <button className={`icon-btn ${drawer === "graf" ? "on" : ""}`}
-                  data-tip={T("page.tab.graf.tip")}
+          <button className={`icon-btn sq ${drawer === "graf" ? "on" : ""}`}
+                  data-tip={T("page.tab.graf.tip")} aria-label={T("page.tab.graf")}
                   onClick={() => setDrawer((d) => (d === "graf" ? null : "graf"))}>
-            <span className="lbl">{T("page.tab.graf")}</span>
+            <I.graph />
           </button>
-          <button className={`icon-btn ${drawer === "setting" ? "on" : ""}`}
-                  data-tip={T("page.tab.setting.tip")}
+          <button className="icon-btn sq" data-tip={T("page.tema.tip")} aria-label={T("page.tema.tip")}
+                  onClick={() => setTheme((v) => (v === "dark" ? "light" : "dark"))}>
+            {theme === "dark" ? <I.sun /> : <I.moon />}
+          </button>
+          <div className="seg-lang" role="group" aria-label={T("page.bahasa.tip")}>
+            {(["id", "en"] as const).map((b) => (
+              <button key={b} className={L === b ? "on" : ""} data-tip={T("page.bahasa.tip")}
+                      onClick={() => setSetting({ ...setting, bahasa: b })}>
+                {b.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <button className="icon-btn sq" data-tip={T("page.tanya.tip")} aria-label={T("page.tanya.tip")}
+                  onClick={() => setShowAbout(true)}>
+            <I.help />
+          </button>
+          <button className={`icon-btn sq ${drawer === "setting" ? "on" : ""}`}
+                  data-tip={T("page.tab.setting.tip")} aria-label={T("page.tab.setting")}
                   onClick={() => setDrawer((d) => (d === "setting" ? null : "setting"))}>
-            <span className="lbl">{T("page.tab.setting")}</span>
-          </button>
-          <button className="icon-btn sq" data-tip={T("page.tema.tip")}
-                  onClick={() => setTheme((v) => (v === "dark" ? "light" : "dark"))}
-                  aria-label={T("page.tema.tip")}>
-            {theme === "dark" ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 2v2" /><path d="M12 20v2" />
-                <path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" />
-                <path d="M2 12h2" /><path d="M20 12h2" />
-                <path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" />
-              </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-              </svg>
-            )}
-          </button>
-          <button className="icon-btn lang" data-tip={T("page.bahasa.tip")}
-                  onClick={gantiBahasa}>
-            <span className="lbl">{L.toUpperCase()}</span>
-          </button>
-          <button className="icon-btn sq" data-tip={T("page.tanya.tip")}
-                  onClick={() => setShowAbout(true)}
-                  aria-label={T("page.tanya.tip")}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-              <path d="M12 17h.01" />
-            </svg>
+            <I.gear />
           </button>
         </div>
       </header>
       {showAbout && (
         <div className="about-backdrop" onClick={() => setShowAbout(false)}>
-          <div className="about-card" onClick={(e) => e.stopPropagation()}>
+          <div className="about-card" role="dialog" aria-modal="true" aria-label={T("about.judul")}
+               onClick={(e) => e.stopPropagation()}>
             <div className="about-head">
               <div className="about-title">{T("about.judul")}</div>
-              <button className="icon-btn sq" onClick={() => setShowAbout(false)}>✕</button>
+              <button className="icon-btn sq" onClick={() => setShowAbout(false)}
+                      aria-label={T("about.tutup")}><I.x /></button>
             </div>
             <div className="about-body">
               <p>{T("about.p1")}</p>
@@ -326,101 +352,133 @@ export default function Halaman() {
       )}
 
       <div className="app-body">
-        {/* ================= left: history ================= */}
+        {/* ================= sidebar ================= */}
+        {!sidebarTutup && <div className="side-backdrop" onClick={() => setSidebarTutup(true)} />}
         <aside className={`sidebar ${sidebarTutup ? "tutup" : ""}`} data-testid="panel-kiri">
           <div className="sidebar-head">
-            <button className="btn block" data-tip={T("page.baru.tip")}
-                    onClick={() => { setTurns([]); setAktifTurn(-1); setError("");
-                      setTracesGraf([]);
+            <button className="btn block newchat" data-tip={T("page.baru.tip")}
+                    onClick={() => { setTurns([]); setError(""); setTracesGraf([]);
                       setTotalToken(
                         { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0, cached_tokens: 0 }); }}>
-              {T("page.baru")}
+              <I.plus /> {T("page.baru")}
             </button>
           </div>
-          <input className="side-search" value={cari} placeholder={T("page.cari")}
-                 onChange={(e) => setCari(e.target.value)} />
+          <div className="side-search">
+            <I.search />
+            <input ref={searchRef} value={cari} placeholder={T("page.cari")}
+                   onChange={(e) => setCari(e.target.value)} aria-label={T("page.cari")} />
+            <kbd>⌘K</kbd>
+          </div>
           <div className="side-list">
-            {riwayatTampil.length === 0 && (
-              <div style={{ color: "var(--muted)", fontSize: 12, padding: "0 12px" }}>
-                {T("page.kosong")}
-              </div>
+            {riwayatCari.length === 0 && (
+              <div className="side-empty">{T("side.kosong")}</div>
             )}
-            {riwayatTampil.map((h) => (
-              <div key={h.id} className={`side-item ${aktifId === h.id ? "aktif" : ""}`}
-                   onClick={() => bukaRiwayat(h.id)}>
-                <div className="q">{h.question?.slice(0, 72) || T("page.kosong.q")}</div>
-                <div className="meta">
-                  <span>{new Date(h.created_at).toLocaleString(LOC)}</span>
-                  <span className="dot" />
-                  <span className={`chip ${h.mode === "agent" ? "agent" : ""}`}>{h.mode}</span>
-                  <span className={`chip ${h.retrieval}`}>{h.retrieval}</span>
-                </div>
-                <div className="side-actions" onClick={(e) => e.stopPropagation()}>
-                  <a className="mini-btn" href={api.exportUrl(h.id, "md")}
-                     target="_blank" rel="noreferrer">MD</a>
-                  <a className="mini-btn" href={api.exportUrl(h.id, "txt")}
-                     target="_blank" rel="noreferrer">TXT</a>
-                  <a className="mini-btn" href={api.exportUrl(h.id, "html")}
-                     target="_blank" rel="noreferrer">PDF</a>
-                  <button className="mini-btn" data-tip={T("page.hapus.tip")} onClick={() => hapusRiwayat(h.id)}>✕</button>
-                </div>
+            {URUT_GRUP.map((g) => grup[g].length > 0 && (
+              <div key={g}>
+                <div className="side-group">{T(`side.grup.${g}`)}</div>
+                {grup[g].map((h) => (
+                  <div key={h.id} className={`side-item ${aktifId === h.id ? "aktif" : ""}`}>
+                    <div className="row">
+                      <button className="txt" style={{ background: "none", border: "none", padding: 0,
+                                                      textAlign: "left", cursor: "pointer", color: "inherit",
+                                                      font: "inherit" }}
+                              onClick={() => bukaRiwayat(h.id)}>
+                        <div className="q">{h.question?.slice(0, 120) || T("page.kosong.q")}</div>
+                        <div className="meta">
+                          <span>{new Date(h.created_at).toLocaleTimeString(LOC, { hour: "2-digit", minute: "2-digit" })}</span>
+                          <span>·</span>
+                          <span style={{ textTransform: "capitalize" }}>{h.mode} · {h.retrieval}</span>
+                        </div>
+                      </button>
+                      <button className="menu-btn" data-tip={T("side.menu")}
+                              aria-label={T("side.menu")}
+                              onClick={() => setOpenMenu((m) => (m === h.id ? null : h.id))}>
+                        <I.dots />
+                      </button>
+                    </div>
+                    {openMenu === h.id && (
+                      <div className="menu-pop">
+                        <div style={{ fontSize: 11, color: "var(--text-faint)", padding: "4px 10px",
+                                      fontWeight: 700, textTransform: "uppercase", letterSpacing: ".6px" }}>
+                          {T("menu.ekspor")}
+                        </div>
+                        <a style={{ textDecoration: "none", color: "inherit" }}
+                           href={api.exportUrl(h.id, "md")} target="_blank" rel="noreferrer">
+                          <button><I.file />{T("menu.md")}</button>
+                        </a>
+                        <a style={{ textDecoration: "none", color: "inherit" }}
+                           href={api.exportUrl(h.id, "txt")} target="_blank" rel="noreferrer">
+                          <button><I.file />{T("menu.txt")}</button>
+                        </a>
+                        <a style={{ textDecoration: "none", color: "inherit" }}
+                           href={api.exportUrl(h.id, "html")} target="_blank" rel="noreferrer">
+                          <button><I.file />{T("menu.pdf")}</button>
+                        </a>
+                        <button className="danger" onClick={() => {
+                          if (window.confirm(T("menu.hapus.tanya"))) hapusRiwayat(h.id);
+                        }}><I.trash />{T("menu.hapus")}</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
+          <button className="model-chip" data-tip={T("model.chip.tip")}
+                  onClick={() => setDrawer("setting")}>
+            <span className="dot-live" />
+            <b>{setting.llm.model || "—"} · {setting.llm.provider}</b>
+          </button>
         </aside>
 
-        {/* ================= center: chat ================= */}
+        {/* ================= center chat ================= */}
         <section className="chat-col">
           <ChatPanel
             turns={turns} busy={busy} error={error} dryRun={setting.dryRun}
             semuaSitasi={turns.flatMap((t) => t.citations || [])}
             bahasa={L} totalToken={totalToken}
+            mode={setting.mode}
+            onToggleMode={gantiMode}
+            onStop={stop}
             onKirim={(q) => kirim(q)}
-            onCiteClick={(c) => alert(c.official_title
-              ? `[S${c.n}] ${c.official_title} — ${c.citation_str}\n\n` +
-                `${T("page.skor")}: cosine=${c.score}` +
-                (c.skor_bm25 != null ? ` · BM25=${c.skor_bm25}` : "") +
-                (c.skor_fusi != null ? ` · ${T("page.fusi")}=${c.skor_fusi}` : "") +
-                `\n${T("chat.src.hal")}.${c.page ?? "?"} ${T("chat.src.baris")} ${c.lines?.[0] ?? "?"}-${c.lines?.[1] ?? "?"}` +
-                `\n\n${c.text?.slice(0, 800)}`
-              : `[S${c.n}] ${T("page.sitasi.hilang")} ` +
-                T("page.sitasi.hilang2"))}
           />
         </section>
 
-        {/* ================= right: docked panel ================= */}
-        {drawer && (
-          <div className="resizer-kanan" data-testid="resizer-kanan"
-               title={T("page.resize.tip")}
-               onMouseDown={(e) => { dragKanan.current = { sx: e.clientX, awal: lebarKanan };
-                 document.body.style.cursor = "col-resize"; }} />
-        )}
-        <aside className={`drawer ${drawer ? "open" : ""}`} data-testid="panel-kanan"
-               style={drawer ? { width: lebarKanan, minWidth: lebarKanan, maxWidth: lebarKanan } : undefined}>
-          <div className="drawer-head">
-            <div className="drawer-title">
+        {/* ================= overlay drawer ================= */}
+        <div className={`ov-backdrop ${drawer ? "show" : ""}`} onClick={() => setDrawer(null)} />
+        <aside className={`ov-panel ${drawer ? "open" : ""}`} data-testid="panel-kanan"
+               role="dialog" aria-modal="true"
+               aria-label={drawer === "graf" ? T("page.tab.graf") : T("page.tab.setting")}>
+          <div className="ov-head">
+            <div className="ov-title">
               {drawer === "graf" ? T("page.tab.graf") : T("page.tab.setting")}
             </div>
-            <div className="header-spacer" />
-            <button className="icon-btn" onClick={() => setDrawer(null)}>✕</button>
+            <button ref={closeBtnRef} className="icon-btn sq" onClick={() => setDrawer(null)}
+                    aria-label={T("about.tutup")}><I.x /></button>
           </div>
-          <div className="kanan-body" style={{ display: drawer === "graf" ? "none" : "" }}>
-            <SettingPanel setting={setting} onChange={setSetting}
-              onUsage={(tk) => {
-                if (!tk || (tk.total_tokens || 0) <= 0) return;
-                setTotalToken((t) => ({
-                  prompt_tokens: t.prompt_tokens + (tk.prompt_tokens || 0),
-                  completion_tokens: t.completion_tokens + (tk.completion_tokens || 0),
-                  total_tokens: t.total_tokens + (tk.total_tokens || 0),
-                  cached_tokens: t.cached_tokens + (tk.cached_tokens || 0),
-                }));
-              }} />
+          <div className="ov-body" style={{ display: drawer === "graf" ? "none" : "" }}>
+            {drawer !== "graf" && (
+              <SettingPanel setting={setting} onChange={setSetting}
+                onUsage={(tk) => {
+                  if (!tk || (tk.total_tokens || 0) <= 0) return;
+                  setTotalToken((t) => ({
+                    prompt_tokens: t.prompt_tokens + (tk.prompt_tokens || 0),
+                    completion_tokens: t.completion_tokens + (tk.completion_tokens || 0),
+                    total_tokens: t.total_tokens + (tk.total_tokens || 0),
+                    cached_tokens: t.cached_tokens + (tk.cached_tokens || 0),
+                  }));
+                }} />
+            )}
           </div>
-          <div className="kanan-body" style={{ display: drawer === "graf" ? "" : "none" }}>
-            <GrafPanel trace={traceAktif} onReplay={replay} bahasa={L} />
+          <div className="ov-body" style={{ display: drawer === "graf" ? "" : "none" }}>
+            {drawer === "graf" && (
+              <GrafPanel trace={traceAktif} onReplay={replay} bahasa={L} />
+            )}
           </div>
         </aside>
       </div>
+
+      {toast && <div className="toast show" role="status">{toast}</div>}
     </div>
   );
 }
