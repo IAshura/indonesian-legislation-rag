@@ -355,7 +355,7 @@ button.cite { font: inherit; }
 .composer { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 20px;
   box-shadow: var(--shadow-soft); transition: border-color .18s var(--ease), box-shadow .18s var(--ease);
   padding: 10px 10px 10px 18px; display: flex; align-items: flex-end; gap: 10px; }
-.composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 24px var(--accent-soft); }
+.composer:focus-within { border-color: var(--border-strong); box-shadow: var(--shadow-soft); }
 .composer textarea { flex: 1; min-width: 0; background: transparent; border: none; color: var(--text); resize: none;
   font: inherit; font-size: 15px; min-height: 26px; max-height: 200px; padding: 6px 0; line-height: 1.6; }
 .composer textarea:focus { outline: none; }
