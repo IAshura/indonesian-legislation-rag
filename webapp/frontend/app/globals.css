@@ -342,14 +342,16 @@ h1, h2, h3 { text-wrap: balance; }
   font-variant-numeric: tabular-nums; margin-top: 6px; }
 .disclaimer { text-align: center; font-size: 12px; color: var(--text-faint); margin-top: 6px; }
 
-/* ---------------- overlay drawer (settings / graph) ---------------- */
-.ov-backdrop { position: fixed; inset: 0; background: var(--overlay); backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .2s var(--ease); }
-.ov-backdrop.show { opacity: 1; pointer-events: auto; }
-.ov-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 94vw; z-index: 41;
-  background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow);
-  display: flex; flex-direction: column; transform: translateX(102%); transition: transform .22s var(--ease); }
-.ov-panel.open { transform: none; }
+/* ---------------- docked side panel (settings / graph, in-flow) ---------------- */
+.ov-backdrop { display: none; }
+.ov-panel { width: 420px; min-width: 320px; max-width: 46vw; flex: none;
+  background: var(--surface); border-left: 1px solid var(--border);
+  display: none; flex-direction: column; min-height: 0; }
+.ov-panel.open { display: flex; }
+/* drag handle between chat and docked panel */
+.dock-resizer { width: 6px; min-width: 6px; cursor: col-resize; background: transparent;
+  transition: background .15s var(--ease); flex: none; }
+.dock-resizer:hover { background: var(--accent); }
 .ov-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .ov-title { font-family: var(--font-serif); font-size: 20px; font-weight: 500; flex: 1; }
 .ov-body { flex: 1; overflow: auto; padding: 16px; min-height: 0; }

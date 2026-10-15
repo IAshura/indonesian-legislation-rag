@@ -72,6 +72,20 @@ export default function Halaman() {
   const [cari, setCari] = useState("");
   const [showAbout, setShowAbout] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  // docked panel width (draggable via the handle between chat and panel)
+  const [lebarKanan, setLebarKanan] = useState(420);
+  const dragKanan = useRef<{ sx: number; awal: number } | null>(null);
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      if (!dragKanan.current) return;
+      const w = dragKanan.current.awal + (dragKanan.current.sx - e.clientX);
+      setLebarKanan(Math.max(320, Math.min(640, w)));
+    };
+    const up = () => { dragKanan.current = null; document.body.style.cursor = ""; };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    return () => { window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); };
+  }, []);
   const searchRef = useRef<HTMLInputElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -444,10 +458,15 @@ export default function Halaman() {
           />
         </section>
 
-        {/* ================= overlay drawer ================= */}
-        <div className={`ov-backdrop ${drawer ? "show" : ""}`} onClick={() => setDrawer(null)} />
+        {/* ================= docked panel (in-flow, pushes layout) ================= */}
+        {drawer && (
+          <div className="dock-resizer" data-tip={T("page.resize.tip")}
+               onMouseDown={(e) => { dragKanan.current = { sx: e.clientX, awal: lebarKanan };
+                 document.body.style.cursor = "col-resize"; }} />
+        )}
         <aside className={`ov-panel ${drawer ? "open" : ""}`} data-testid="panel-kanan"
-               role="dialog" aria-modal="true"
+               style={drawer ? { width: lebarKanan, minWidth: lebarKanan, maxWidth: lebarKanan } : undefined}
+               role="dialog" aria-modal="false"
                aria-label={drawer === "graf" ? T("page.tab.graf") : T("page.tab.setting")}>
           <div className="ov-head">
             <div className="ov-title">
