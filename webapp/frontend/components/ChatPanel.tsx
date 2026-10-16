@@ -31,6 +31,8 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
   const [voted, setVoted] = useState<Record<number, "up" | "down">>({});
   const [detailSitasi, setDetailSitasi] = useState<{ list: Citation[]; idx: number } | null>(null);
   const openerRef = useRef<HTMLElement | null>(null);
+  const tahanFokus = useRef(0);
+  const bolehFokus = () => Date.now() - tahanFokus.current > 800;
   const bukaDetail = (list: Citation[], n: number) => {
     openerRef.current = document.activeElement as HTMLElement | null;
     let idx = list.findIndex((x) => x.n === n);
@@ -45,6 +47,8 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
   };
   const tutupDetail = () => {
     setDetailSitasi(null);
+    // Jangan biarkan fokus yang dikembalikan membuka tooltip lagi.
+    tahanFokus.current = Date.now();
     openerRef.current?.focus?.();
   };
   const kirim = () => {
@@ -169,6 +173,7 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
                     )}
                     <div className="prose">
                       <BubbleDenganSitasi text={t.text} citations={t.citations || []} cariGlobal={cariSitasi}
+                                          bolehFokus={bolehFokus}
                                           onDetail={(list, n) => bukaDetail(list, n)} />
                     </div>
                     {t.streaming && !t.text && (
@@ -336,10 +341,11 @@ function PenalaranView({ reasoning, mentah, lang }: {
   );
 }
 
-function BubbleDenganSitasi({ text, citations, cariGlobal, onDetail }: {
+function BubbleDenganSitasi({ text, citations, cariGlobal, bolehFokus, onDetail }: {
   text: string;
   citations: Citation[];
   cariGlobal: (n: number, lokal: Citation[]) => Citation | undefined;
+  bolehFokus: () => boolean;
   onDetail: (list: Citation[], n: number) => void;
 }) {
   // Light markdown: ## headings, -/* bullets, **bold**, [Sn] citations with hover cards.
@@ -349,6 +355,7 @@ function BubbleDenganSitasi({ text, citations, cariGlobal, onDetail }: {
       if (m) {
         const n = Number(m[1]);
         return <Cite key={`${kunci}-${i}`} n={n} c={cariGlobal(n, citations)}
+                     bolehFokus={bolehFokus}
                      onOpen={() => onDetail(citations, n)} />;
       }
       // **bold** inside the same chunk
@@ -383,9 +390,10 @@ function BubbleDenganSitasi({ text, citations, cariGlobal, onDetail }: {
 // never clipped by the scrolling chat column. Default below the chip;
 // flips above only when there is no room underneath; always kept inside
 // the viewport horizontally.
-function Cite({ n, c, onOpen }: {
+function Cite({ n, c, bolehFokus, onOpen }: {
   n: number;
   c: Citation | undefined;
+  bolehFokus: () => boolean;
   onOpen: () => void;
 }) {
   const [buka, setBuka] = useState(false);
@@ -404,6 +412,7 @@ function Cite({ n, c, onOpen }: {
     setPos({ top, left });
   };
   const bukaPop = () => { hitung(); setBuka(true); };
+  const fokusPop = () => { if (bolehFokus()) bukaPop(); };
   useEffect(() => {
     if (!buka) return;
     const tutup = () => setBuka(false);
@@ -417,8 +426,8 @@ function Cite({ n, c, onOpen }: {
   return (
     <span className="cite-wrap" onMouseLeave={() => setBuka(false)}>
       <button type="button" ref={ref} className="cite"
-              onClick={onOpen}
-              onMouseEnter={bukaPop} onFocus={bukaPop} onBlur={() => setBuka(false)}
+              onClick={() => { setBuka(false); onOpen(); }}
+              onMouseEnter={bukaPop} onFocus={fokusPop} onBlur={() => setBuka(false)}
               aria-label={`[${n}]${c ? ` ${c.official_title} — ${c.citation_str}` : ""}`}>
         [<span className="cite-num">{n}</span>]
       </button>
