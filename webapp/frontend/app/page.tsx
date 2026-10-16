@@ -321,8 +321,8 @@ export default function Halaman() {
         <div className="header-spacer" />
         <div className="header-status">
           <div className="token-head">
-            <span className="tk-total"><b>{totalToken.total_tokens.toLocaleString(LOC)}</b> {T("page.token")}</span>
             <span className="tk-sub">in {totalToken.prompt_tokens.toLocaleString(LOC)} · out {totalToken.completion_tokens.toLocaleString(LOC)}</span>
+            <span className="tk-total"><b>{totalToken.total_tokens.toLocaleString(LOC)}</b> {T("page.token")}</span>
           </div>
           <button className={`icon-btn sq ${drawer === "graf" ? "on" : ""}`}
                   data-tip={T("page.tab.graf.tip")} aria-label={T("page.tab.graf")}
