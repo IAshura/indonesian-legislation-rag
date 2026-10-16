@@ -320,9 +320,9 @@ export default function Halaman() {
         <div className="brand">ChatBOT Law ID</div>
         <div className="header-spacer" />
         <div className="header-status">
-          <div className="token-head"
-               data-tip={`input/output: ${totalToken.prompt_tokens.toLocaleString(LOC)}/${totalToken.completion_tokens.toLocaleString(LOC)}`}>
-            <b>{totalToken.total_tokens.toLocaleString(LOC)}</b> {T("page.token")}
+          <div className="token-head">
+            <span className="tk-total"><b>{totalToken.total_tokens.toLocaleString(LOC)}</b> {T("page.token")}</span>
+            <span className="tk-sub">in {totalToken.prompt_tokens.toLocaleString(LOC)} · out {totalToken.completion_tokens.toLocaleString(LOC)}</span>
           </div>
           <button className={`icon-btn sq ${drawer === "graf" ? "on" : ""}`}
                   data-tip={T("page.tab.graf.tip")} aria-label={T("page.tab.graf")}
