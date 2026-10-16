@@ -99,16 +99,6 @@ export default function ChatPanel({ turns, busy, error, dryRun, semuaSitasi, bah
 
   return (
     <>
-      <div className="token-pill">
-        <div className="tk-row">
-          <span className="tk-cap">in / out</span>
-          <span className="tk-val">{totalToken.prompt_tokens.toLocaleString(LOC)} / {totalToken.completion_tokens.toLocaleString(LOC)}</span>
-        </div>
-        <div className="tk-row">
-          <span className="tk-cap">total</span>
-          <span className="tk-val"><b>{totalToken.total_tokens.toLocaleString(LOC)}</b></span>
-        </div>
-      </div>
       <div className="chat-scroll" ref={scrollRef}>
         <div className="chat-inner">
           {turns.length === 0 && (
