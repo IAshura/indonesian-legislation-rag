@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, muatSetting, simpanSetting } from "../lib/store";
 import {
-  ChatTurn, HistoryMeta, Settings, TraceNode, DEFAULT_SETTINGS,
+  ChatTurn, HistoryMeta, Settings, TokenUsage, TraceNode, DEFAULT_SETTINGS,
 } from "../lib/types";
 import ChatPanel from "../components/ChatPanel";
 import SettingPanel from "../components/SettingPanel";
@@ -270,6 +270,15 @@ export default function Halaman() {
       ]);
       // graph loads from history: fill with this history's trace (not cumulative)
       setTracesGraf(d.trace || []);
+      // continue the token counter from this history (don't restart at 0)
+      const tk = (d as { usage?: { tokens?: TokenUsage } }).usage?.tokens;
+      if (tk && (tk.total_tokens || 0) > 0)
+        setTotalToken({
+          prompt_tokens: tk.prompt_tokens || 0,
+          completion_tokens: tk.completion_tokens || 0,
+          total_tokens: tk.total_tokens || 0,
+          cached_tokens: tk.cached_tokens || 0,
+        });
       setOpenMenu(null);
     } catch (e) { setError((e as Error).message); }
   }, []);
