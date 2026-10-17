@@ -79,6 +79,7 @@ export interface Settings {
   year: string;
   embedding: string;               // tag bebas, terdeteksi dari /api/models
   llm: LLMSetting;
+  llmEnvKey?: boolean;             // server punya LLM_API_KEY (.env); field key boleh kosong
   dryRun: boolean;
 }
 

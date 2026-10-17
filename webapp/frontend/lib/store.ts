@@ -94,6 +94,8 @@ export const api = {
   health: () => fetch(`${API}/api/health`).then(res_ok),
   milvusStatus: () => fetch(`${API}/api/milvus/status`).then(res_ok),
   models: () => fetch(`${API}/api/models`).then(res_ok),
+  // Default LLM dari .env backend (prefill Setting; api_key tidak dikirim)
+  envDefaults: () => fetch(`${API}/api/llm/env-defaults`).then(res_ok),
   switchEmbedding: (tag: string) =>
     fetch(`${API}/api/embedding/switch`, {
       method: "POST", headers: { "Content-Type": "application/json" },

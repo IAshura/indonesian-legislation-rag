@@ -1,7 +1,8 @@
 @echo off
 REM ============================================================
 REM  Indonesian Law RAG - ONE-CLICK LAUNCHER
-REM  Starts: Docker/Milvus -> Backend :8000 -> Frontend :3000
+REM  Checks: venv -> dataset (prompt-download) -> Docker/Milvus
+REM          -> backend :8000 -> frontend :3000
 REM  Usage: double-click this file. DON'T close the 2 black windows.
 REM ============================================================
 setlocal
@@ -22,30 +23,40 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
-REM ---------- [1] Docker Desktop ----------
-echo  [1/4] Checking Docker Desktop ...
-docker info >nul 2>&1
-if errorlevel 1 (
+REM ---------- [1/5] Dataset artifacts (download from Hugging Face) ----------
+echo  [1/5] Checking dataset artifacts ...
+if exist "pipeline\result\chunks.jsonl" if exist "pipeline\result\embeddings\ACTIVE" goto DATASET_OK
+echo.
+echo  [MISSING] Dataset artifacts not found in pipeline\result\.
+echo           Backend cannot answer without them (chunks + embeddings).
+set /p DL="  Download dataset? (1.15 GB, Hugging Face) [Y/N]: "
+if /i not "%DL%"=="Y" (
   echo.
-  echo  [WARNING] Docker Desktop is OFF / Engine not running.
-  echo            Consequence: HNSW/IVF/FLAT index methods unavailable.
-  echo            Still works: exact-numpy + BM25 + hybrid-exact.
+  echo  [WARNING] Dataset is missing. The backend cannot answer without it.
+  echo            Run this later:  python tools\download_dataset.py
+  echo            then re-run this file.
   echo.
-  echo            To enable Milvus: open Docker Desktop,
-  echo            wait for "Engine running", then re-run
-  echo            this file OR manually:  cd C:\milvus  ^&  docker compose up -d
-  echo.
-  set /p CONTINUE="  Continue WITHOUT Milvus? [Y/N]: "
-  if /i not "%CONTINUE%"=="Y" (
-    echo  Cancelled. Start Docker Desktop first, then retry.
-    echo.
-    echo  Press any key to close ...
-    pause >nul
-    exit /b 1
-  )
-  echo  Continuing without Milvus ...
-  goto SKIP_MILVUS
+  echo  Press any key to close ...
+  pause >nul
+  exit /b 1
 )
+echo  Downloading - one-time, may take several minutes ...
+".venv\Scripts\python.exe" -m pip install -q huggingface_hub
+".venv\Scripts\python.exe" tools\download_dataset.py
+if errorlevel 1 (
+  echo  [FATAL] Download failed. Check internet, then re-run this file
+  echo          or run tools\download_dataset.py manually.
+  pause
+  exit /b 1
+)
+:DATASET_OK
+echo  Dataset artifacts OK.
+echo.
+
+REM ---------- [2/5] Docker Desktop ----------
+echo  [2/5] Checking Docker Desktop ...
+docker info >nul 2>&1
+if errorlevel 1 goto DOCKER_OFF
 
 echo  Docker is up. Starting Milvus ...
 cd /d C:\milvus
@@ -55,6 +66,37 @@ if errorlevel 1 (
   cd /d "%~dp0"
   goto SKIP_MILVUS
 )
+goto MILVUS_WAIT
+
+:DOCKER_OFF
+echo.
+echo  [WARNING] Docker Desktop is OFF / Engine not running.
+echo            Consequence: HNSW/IVF/FLAT index methods unavailable.
+echo            Still works: exact-numpy + BM25 + hybrid-exact.
+echo.
+echo            To enable Milvus: open Docker Desktop,
+echo            wait for "Engine running", then re-run
+echo            this file OR manually:  cd C:\milvus  ^&  docker compose up -d
+echo.
+set /p CONTINUE="  Continue WITHOUT Milvus? [Y/N]: "
+if /i not "%CONTINUE%"=="Y" (
+  echo  Cancelled. Start Docker Desktop first, then retry.
+  echo.
+  echo  Press any key to close ...
+  pause >nul
+  exit /b 1
+)
+echo  Continuing without Milvus ...
+echo.
+echo  [WARNING] NO-MILVUS MODE. Features NOT available in this session:
+echo            - dense method "hnsw" and "ivf" (ann index search)
+echo            - "flat" via Milvus
+echo            In the webapp Settings, pick dense method "exact" instead.
+echo            Exact-numpy + BM25 + hybrid-exact still work normally.
+echo.
+goto SKIP_MILVUS
+
+:MILVUS_WAIT
 echo  Waiting for Milvus - probing port 19530 every 5s, max 90s- ...
 set TRY=0
 :WAIT_MILVUS
@@ -78,8 +120,8 @@ cd /d "%~dp0"
 :SKIP_MILVUS
 echo.
 
-REM ---------- [2] Python deps (once, skipped when present) ----------
-echo  [2/4] Checking backend deps ...
+REM ---------- [3/5] Python deps (once, skipped when present) ----------
+echo  [3/5] Checking backend deps ...
 ".venv\Scripts\python.exe" -c "import fastapi, uvicorn" >nul 2>&1
 if errorlevel 1 (
   echo  fastapi/uvicorn missing - installing requirements, one-time, slow ...
@@ -94,8 +136,8 @@ if errorlevel 1 (
 )
 echo.
 
-REM ---------- [3] Backend :8000 ----------
-echo  [3/4] Backend http://127.0.0.1:8000 ...
+REM ---------- [4/5] Backend :8000 ----------
+echo  [4/5] Backend http://127.0.0.1:8000 ...
 netstat -ano | findstr ":8000" | findstr "LISTENING" >nul
 if not errorlevel 1 (
   echo  [WARNING] Port 8000 in use - old backend still running-. Skipping.
@@ -108,8 +150,8 @@ if not errorlevel 1 (
 )
 echo.
 
-REM ---------- [4] Frontend :3000 ----------
-echo  [4/4] Frontend http://localhost:3000 ...
+REM ---------- [5/5] Frontend :3000 ----------
+echo  [5/5] Frontend http://localhost:3000 ...
 where node >nul 2>&1
 if errorlevel 1 (
   echo  [FATAL] node/npm not found. Install Node.js LTS from nodejs.org, then retry.

@@ -10,6 +10,8 @@ Endpoint:
   GET  /api/milvus/status             -> {ok, koleksi, entitas, dim, cocok_dim}
   GET  /api/models                   -> daftar embedding + tag aktif
   POST /api/llm/ping {llm}            -> {ok, ms, model, usage} (tanpa retrieval)
+  GET  /api/llm/env-defaults          -> {ok, base_url, model, has_api_key}
+                                         (prefill Setting dari .env backend)
   POST /api/embedding/switch {tag}    -> tulis ACTIVE + reload modul lama
   POST /api/ask                       -> jawaban + citations + trace + usage
     body: {question, mode:"fixed"|"agent", retrieval:"hybrid"|"dense"|"bm25",
@@ -31,6 +33,7 @@ CATATAN KEAMANAN
 from __future__ import annotations
 
 import json
+import os
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -38,6 +41,17 @@ from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+# Muat .env (webapp/backend/.env) TANPA dependensi python-dotenv:
+# format `KEY=VALUE`, baris kosong / # diabaikan; env asli lebih diutamakan.
+_ENV_FILE = Path(__file__).resolve().parent / ".env"
+if _ENV_FILE.exists():
+    for _line in _ENV_FILE.read_text(encoding="utf-8").splitlines():
+        _line = _line.strip()
+        if not _line or _line.startswith("#") or "=" not in _line:
+            continue
+        _k, _v = _line.split("=", 1)
+        os.environ.setdefault(_k.strip(), _v.strip())
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -374,6 +388,23 @@ def api_ask_stream(req: AskRequest):
 
 class PingRequest(BaseModel):
     llm: LLMConfig | None = None
+
+
+@app.get("/api/llm/env-defaults")
+def api_llm_env_defaults():
+    """Default LLM dari env/.env backend untuk prefill Setting di browser.
+
+    api_key TIDAK dikirim ke browser - cukup tanda has_api_key; saat request
+    tanpa api_key, backend otomatis pakai LLM_API_KEY dari env (llm_provider).
+    """
+    base_url = os.environ.get("LLM_BASE_URL", "").strip()
+    model = os.environ.get("LLM_MODEL", "").strip()
+    return {
+        "ok": bool(base_url),
+        "base_url": base_url,
+        "model": model,
+        "has_api_key": bool(os.environ.get("LLM_API_KEY", "").strip()),
+    }
 
 
 # ------------------------------------------------------------------ models

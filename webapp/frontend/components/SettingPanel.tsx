@@ -130,6 +130,8 @@ export default function SettingPanel({ setting, onChange, onUsage }: {
               <div style={{ position: "relative" }}>
               <input type={showKey ? "text" : "password"} value={setting.llm.api_key}
                      style={{ paddingRight: 44 }}
+                     placeholder={setting.llmEnvKey && !setting.llm.api_key
+                       ? "(dari .env server — otomatis)" : ""}
                      onChange={(e) => set({ llm: { ...setting.llm, api_key: e.target.value } })} />
                 <button type="button" className="eye-btn"
                         data-tip={showKey ? T("set.apikey.sembunyi") : T("set.apikey.lihat")}

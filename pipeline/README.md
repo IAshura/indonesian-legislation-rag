@@ -9,7 +9,7 @@ Mendeley Data DOI `10.17632/8wpjvhh7g2.1`, **CC BY 4.0** — cantumkan atribusi:
 *Qausar, Prabowo, Arifin & Isa — Binus University*).
 
 Versi 4.1 memakai kebijakan gabungan hasil kurasi tiga eksperimen arsip
-(`../_archive/`: muse_spark, GPT, qwen) + 10 keputusan desain yang telah
+(`../archive/`: muse_spark, GPT, qwen) + 10 keputusan desain yang telah
 disepakati. **Folder ini satu-satunya pipeline aktif.**
 
 ## Prinsip build v4.1 (10 keputusan desain)
@@ -43,7 +43,7 @@ disepakati. **Folder ini satu-satunya pipeline aktif.**
    `enrich_validity.py` — *default offline, tidak pernah menebak*; isi
    `legal_status` hanya dengan bukti (lihat bawah). Tanpa ini, RAG hukum
    berisiko mengutip norma yang sudah dicabut.
-10. **Eksperimen lama diarsipkan** (`../_archive/`) — dataset kanonik hanya
+10. **Eksperimen lama diarsipkan** (`../archive/`) — dataset kanonik hanya
     di sini.
 
 ## Pipeline raw → siap feed embedding

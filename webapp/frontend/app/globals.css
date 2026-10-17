@@ -280,17 +280,16 @@ h1, h2, h3 { text-wrap: balance; }
   padding: 1px 9px; font-size: 11px; font-weight: 700; margin-bottom: 7px; }
 /* citations: dark chips, gold text (matches reference) */
 .cite { display: inline-flex; align-items: center; justify-content: center;
-  background: #2B251C; color: var(--accent); border: none;
-  border-radius: 6px; padding: 1px 7px; margin: 0 2px; cursor: pointer;
-  font-family: Bahnschrift, "Arial Narrow", Arial, sans-serif; font-stretch: semi-condensed;
-  font-size: 11px; font-weight: 800; line-height: 1.5;
+  background: #322B20; color: var(--accent); border: none;
+  border-radius: 7px; padding: 2px 5px; margin: 0 2px; cursor: pointer;
+  font-family: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.45;
   transition: background .12s var(--ease), color .12s var(--ease);
   white-space: nowrap; font-variant-numeric: tabular-nums; }
-.cite-num { text-decoration: none; }
+.cite-num { text-decoration: none; position: relative; top: 0.3px; }
 .cite:hover { background: var(--accent); color: var(--on-accent); }
 /* citation hover card: portaled to body, fixed, always inside viewport */
 .cite-wrap { position: relative; display: inline-block; }
-button.cite { font: inherit; }
+button.cite { font-family: inherit; }
 .cite-pop.portal { position: fixed; display: block; width: 300px; max-width: calc(100vw - 16px);
   background: var(--surface-2); border: 1px solid var(--border-strong);
   border-radius: 12px; box-shadow: var(--shadow); padding: 10px 12px; z-index: 100;
@@ -337,11 +336,11 @@ button.cite { font: inherit; }
 .skel { display: flex; flex-direction: column; gap: 10px; padding: 6px 0; }
 .skel i { display: block; height: 13px; border-radius: 7px;
   background: linear-gradient(90deg, var(--surface-2), var(--surface-hover), var(--surface-2));
-  background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+  background-size: 200% 100%; animation: shimmer 2s ease-in-out infinite; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 .status-line { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); padding: 4px 0; }
 .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border-strong);
-  border-top-color: var(--accent); border-radius: 50%; animation: spin 2.4s linear infinite; vertical-align: -2px; }
+  border-top-color: var(--accent); border-radius: 50%; animation: spin 1.5s linear infinite; vertical-align: -2px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .warnline { color: var(--danger); font-size: 13px; background: color-mix(in srgb, var(--danger) 8%, transparent);
   border: 1px solid var(--danger); border-radius: 12px; padding: 9px 13px; }
@@ -662,4 +661,6 @@ input[type="range"].temp::-moz-range-thumb { width: 16px; height: 16px; border-r
 /* ---------------- reduced motion ---------------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .spin { animation-duration: 1.5s !important; }
+  .skel i { animation-duration: 2s !important; }
 }

@@ -1,6 +1,6 @@
 # RAG — Vanilla (Pure Python, No Framework)
 
-Fixed-pipeline RAG (**Architecture A**) + agentic tool-calling (**Architecture B**) for the Indonesian Legislation RAG project — no LangChain, LlamaIndex, or other framework. All LLM networking is plain `requests` so the protocol stays visible. Concept guide: `docs/llm-injection-tool-calling.html` (ch. 1–9). Full design: `docs/architecture-overview.md`.
+Fixed-pipeline RAG (**Architecture A**) + agentic tool-calling (**Architecture B**) for the Indonesian Legislation RAG project — no LangChain, LlamaIndex, or other framework. All LLM networking is plain `requests` so the protocol stays visible. Full design: `docs/architecture-overview.md`.
 
 > Renamed from `rag-tanpa-framework/` → `rag-vanilla/`. Entry script renamed `rag_jawab.py` → `answer.py`. Old names no longer exist.
 

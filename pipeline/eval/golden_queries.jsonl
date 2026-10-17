@@ -1,0 +1,12 @@
+{"id": "g01", "question": "Di tangan siapa kedaulatan berada menurut UUD 1945?", "expect_any": [{"doc_regex": "undang-undang dasar", "ayat": "2", "kw": ["kedaulatan"], "pasal": "1"}]}
+{"id": "g02", "question": "Berapa lama masa jabatan presiden dan berapa kali dapat dipilih kembali?", "expect_any": [{"doc_regex": "undang-undang dasar", "kw": ["lima tahun"], "pasal": "7"}]}
+{"id": "g03", "question": "Berapa persen anggaran pendidikan dari APBN menurut UUD 1945?", "expect_any": [{"doc_regex": "undang-undang dasar", "kw": ["20"], "pasal": "31"}]}
+{"id": "g04", "question": "Bagaimana sifat pelaksanaan pemilihan umum menurut UUD 1945?", "expect_any": [{"doc_regex": "undang-undang dasar", "kw": ["luber", "langsung"], "pasal": "22E"}]}
+{"id": "g05", "question": "Siapa yang memegang kekuasaan kehakiman?", "expect_any": [{"doc_regex": "undang-undang dasar", "kw": ["kehakiman"], "pasal": "24"}]}
+{"id": "g06", "question": "Apa yang dijamin UUD 1945 tentang agama?", "expect_any": [{"doc_regex": "undang-undang dasar", "kw": ["agama"], "pasal": "29"}]}
+{"id": "g07", "question": "Bagaimana anggaran pendapatan dan belanja negara ditetapkan?", "expect_any": [{"doc_regex": "undang-undang dasar", "kw": ["anggaran"], "pasal": "23"}]}
+{"id": "g08", "question": "Pasal berapa UUD 1945 mengatur Warga Negara?", "expect_any": [{"doc_regex": "undang-undang dasar", "kw": ["warga negara"], "pasal": "26"}]}
+{"id": "g09", "question": "Apa akibat hukum bila suatu peraturan dicabut peraturan baru?", "expect_any": [{"kw": ["mencabut"]}]}
+{"id": "g10", "question": "Bagaimana tata cara pembentukan undang-undang menurut UU pembentukan peraturan perundang-undangan?", "expect_any": [{"kw": ["pembentukan"]}]}
+{"id": "g11", "question": "Apa sanksi bagi pelanggaran administrasi pemilihan?", "expect_any": [{"kw": ["sanksi administratif"]}]}
+{"id": "g12", "question": "Kapan dan bagaimana penyelenggara pemilihan umum dibentuk?", "expect_any": [{"kw": ["penyelenggara"]}]}

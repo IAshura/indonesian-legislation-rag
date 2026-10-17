@@ -131,7 +131,21 @@ export default function Halaman() {
 
   // load settings + history
   useEffect(() => {
-    setSetting(muatSetting());
+    const s = muatSetting();
+    setSetting(s);
+    // Prefill dari .env backend HANYA bila user belum punya konfigurasi sendiri
+    if (!s.llm.base_url && !s.llm.api_key) {
+      api.envDefaults().then((d) => {
+        if (!d || !d.ok) return;
+        setSetting((cur) => ({
+          ...cur,
+          llm: { ...cur.llm,
+            base_url: d.base_url || cur.llm.base_url,
+            model: d.model || cur.llm.model },
+          llmEnvKey: !!d.has_api_key,
+        }));
+      }).catch(() => {});
+    }
     api.history().then((h) => setHistoryList(h.daftar || [])).catch(() => {});
   }, []);
   useEffect(() => { simpanSetting(setting); }, [setting]);

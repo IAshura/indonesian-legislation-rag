@@ -6,8 +6,8 @@ __pycache__/
 venv/
 .pytest_cache/
 
-# Artefak embedding (besar & regeneratif — model index = model query)
-pipeline/result/embeddings/
+# Artefak build + embedding (besar & regeneratif — jalankan build_dataset.py ulang)
+pipeline/result/
 *.npy
 
 # Output evaluasi
@@ -35,3 +35,20 @@ webapp/frontend/out/
 # Never commit credentials
 *.env
 test_temp.py
+
+# Runtime logs & build cache
+*.log
+*.tsbuildinfo
+webapp/backend/history.jsonl
+
+# Local agent-tool workspace
+.kilo/
+
+# Personal learning artifacts (kept on disk, never pushed)
+docs/learning/
+docs/learning-guide.md
+docs/pipeline-data-explained.html
+docs/llm-injection-tool-calling.*
+code-guide-rag-*.pdf
+reference/
+pipeline/colab/

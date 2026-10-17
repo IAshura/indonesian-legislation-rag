@@ -35,7 +35,7 @@ user question
 
 Vector similarity ≈ meaning similarity. "Who holds sovereignty?" and the sovereignty article land close together even with different wording.
 
-Two patterns from the concept guide (`docs/llm-injection-tool-calling.html`):
+Two implementation patterns:
 
 - **Fixed pipeline:** deterministic retrieve → inject → generate. For ordinary RAG. Implemented in `rag-vanilla/answer.py` and `rag-langchain/rag_chain.py`.
 - **Agent / tool calling:** the LLM gets *tools* (callable functions) and decides the next step itself: search first? open an article? check validity? Loop until it says "done". Implemented in `rag-vanilla/agent.py` and `rag-langchain/agent_graph.py` + `reflective_graph.py`.
