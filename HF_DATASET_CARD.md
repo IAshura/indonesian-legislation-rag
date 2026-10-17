@@ -71,8 +71,8 @@ pipeline, v4.1):
 
 ## What processing was applied
 
-All steps are deterministic (seed `20260907`) and scripted in `pipeline/build_dataset.py`
-in the companion code repository (link added once the GitHub repo is public);
+All steps are deterministic (seed `20260907`) and scripted in
+[`pipeline/build_dataset.py`](https://github.com/IAshura/indonesian-legislation-rag/blob/master/pipeline/build_dataset.py);
 
 1. **Schema validation & hashing** — fail-fast on `units.csv`/`documents.csv`;
    SHA256 of every source recorded in `manifest.json`.
@@ -149,5 +149,5 @@ rows = [json.loads(l) for l in urllib.request.urlopen(url).read().splitlines()]
 ## License
 
 The processed artifacts derive from the CC BY 4.0 corpus, so this dataset is
-also **CC BY 4.0** — share with the attribution above. The associated code
-repository is MIT-licensed (see the GitHub repo).
+also **CC BY 4.0** — share with the attribution above. The code repository is
+MIT-licensed: [IAshura/indonesian-legislation-rag](https://github.com/IAshura/indonesian-legislation-rag).
